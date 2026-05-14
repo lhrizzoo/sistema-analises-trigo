@@ -2,9 +2,10 @@
  * Design: Precision Agriculture Dashboard
  * Tabela de dados com cabeçalho verde escuro, campos calculados destacados
  * Colunas de resultado com fundo verde-menta claro
+ * NOVO: Funcionalidade de aplicar área colhida em massa
  */
 import { useState } from 'react';
-import { Pencil, Trash2, Check, X, Calculator } from 'lucide-react';
+import { Pencil, Trash2, Check, X, Calculator, CopyPlus } from 'lucide-react';
 import type { Analysis, AnalysisWithCalculations } from '@/lib/types';
 
 interface DataTableProps {
@@ -12,6 +13,7 @@ interface DataTableProps {
   onUpdate: (id: string, updates: Partial<Analysis>) => void;
   onDelete: (id: string) => void;
   onAdd: (analysis: Omit<Analysis, 'id'>) => void;
+  onUpdateAllAreas?: (area: number) => void;
 }
 
 const emptyForm = {
@@ -24,10 +26,12 @@ const emptyForm = {
   harvestedArea: '',
 };
 
-export default function DataTable({ analyses, onUpdate, onDelete, onAdd }: DataTableProps) {
+export default function DataTable({ analyses, onUpdate, onDelete, onAdd, onUpdateAllAreas }: DataTableProps) {
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState(emptyForm);
+  const [bulkArea, setBulkArea] = useState('');
+  const [showBulkArea, setShowBulkArea] = useState(false);
 
   const handleAdd = () => {
     if (!form.treatment.trim() || !form.sampleWeight || !form.moisture || !form.seedWeight1000) return;
@@ -72,14 +76,73 @@ export default function DataTable({ analyses, onUpdate, onDelete, onAdd }: DataT
 
   const cancelEdit = () => setEditingId(null);
 
+  const handleBulkArea = () => {
+    const area = parseFloat(bulkArea);
+    if (!area || area <= 0 || !onUpdateAllAreas) return;
+    onUpdateAllAreas(area);
+    setBulkArea('');
+    setShowBulkArea(false);
+  };
+
   const inputClass = "w-full px-2 py-1.5 text-sm border rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-[var(--ring)] font-data";
   const inputClassSmall = "w-full px-1.5 py-1 text-xs border rounded bg-white focus:outline-none focus:ring-1 focus:ring-[var(--ring)] font-data";
 
   return (
     <section className="mb-8">
-      <div className="section-label mb-3 flex items-center gap-2">
-        <div className="w-1 h-4 rounded-full" style={{ background: 'var(--primary)' }} />
-        Dados de Entrada e Resultados
+      <div className="flex items-center justify-between mb-3">
+        <div className="section-label flex items-center gap-2">
+          <div className="w-1 h-4 rounded-full" style={{ background: 'var(--primary)' }} />
+          Dados de Entrada e Resultados
+        </div>
+
+        {/* Botão para aplicar área em massa */}
+        {onUpdateAllAreas && (
+          <div className="flex items-center gap-2">
+            {showBulkArea ? (
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border" style={{ borderColor: 'var(--primary)', background: 'var(--result-bg)' }}>
+                <label className="text-xs font-medium" style={{ color: 'var(--foreground)' }}>
+                  Área (m²) para todos:
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  placeholder="ex: 10.8"
+                  value={bulkArea}
+                  onChange={e => setBulkArea(e.target.value)}
+                  className="w-24 px-2 py-1 text-xs border rounded font-data bg-white focus:outline-none focus:ring-1 focus:ring-[var(--ring)]"
+                  onKeyDown={e => e.key === 'Enter' && handleBulkArea()}
+                />
+                <button
+                  onClick={handleBulkArea}
+                  className="px-2.5 py-1 rounded text-xs font-semibold text-white transition-colors"
+                  style={{ background: 'var(--primary)' }}
+                >
+                  Aplicar
+                </button>
+                <button
+                  onClick={() => { setShowBulkArea(false); setBulkArea(''); }}
+                  className="p-1 rounded hover:bg-red-50"
+                >
+                  <X className="w-3.5 h-3.5 text-red-500" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowBulkArea(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border transition-all duration-150"
+                style={{
+                  background: 'var(--card)',
+                  borderColor: 'var(--border)',
+                  color: 'var(--primary)',
+                }}
+                title="Aplicar mesma área colhida a todos os registros"
+              >
+                <CopyPlus className="w-3.5 h-3.5" />
+                Aplicar Área a Todos
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="rounded-lg overflow-hidden border" style={{ borderColor: 'var(--border)' }}>

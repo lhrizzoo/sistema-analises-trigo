@@ -68,10 +68,10 @@ export function calcTreatmentStats(analyses: AnalysisWithCalculations[]): Treatm
   const stats: TreatmentStats[] = [];
 
   for (const [treatment, items] of groups) {
-    const moistures = items.map(i => i.moisture);
-    const seeds = items.map(i => i.seedWeight1000);
-    const corrected = items.map(i => i.correctedWeight14);
-    const productivities = items.filter(i => i.productivityKgHa !== null).map(i => i.productivityKgHa!);
+    const moistures = items.map((i: AnalysisWithCalculations) => i.moisture);
+    const seeds = items.map((i: AnalysisWithCalculations) => i.seedWeight1000);
+    const corrected = items.map((i: AnalysisWithCalculations) => i.correctedWeight14);
+    const productivities = items.filter((i: AnalysisWithCalculations) => i.productivityKgHa !== null).map((i: AnalysisWithCalculations) => i.productivityKgHa!);
 
     const avgMoisture = moistures.reduce((a: number, b: number) => a + b, 0) / moistures.length;
     const avgSeedWeight1000 = seeds.reduce((a: number, b: number) => a + b, 0) / seeds.length;

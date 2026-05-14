@@ -51,6 +51,29 @@ export function useAnalyses() {
     updateAndSave(prev => prev.filter(a => a.id !== id));
   }, [updateAndSave]);
 
+  /**
+   * Aplica uma área colhida a todos os registros visíveis (filtrados)
+   * ou a todos os registros se nenhum filtro estiver ativo
+   */
+  const updateAllAreas = useCallback((area: number, treatmentFilter?: string) => {
+    updateAndSave(prev => prev.map(a => {
+      if (treatmentFilter && treatmentFilter !== 'Todos') {
+        const base = getTreatmentBase(a.treatment);
+        if (base !== treatmentFilter) return a;
+      }
+      return { ...a, harvestedArea: area };
+    }));
+  }, [updateAndSave]);
+
+  /**
+   * Reseta os dados para o estado inicial
+   */
+  const resetData = useCallback(() => {
+    localStorage.removeItem(STORAGE_KEY);
+    setAnalyses(initialAnalyses);
+    saveAnalyses(initialAnalyses);
+  }, []);
+
   // Analyses with calculations
   const analysesWithCalc = useMemo<AnalysisWithCalculations[]>(
     () => analyses.map(withCalculations),
@@ -83,10 +106,15 @@ export function useAnalyses() {
     return analysesWithCalc.filter(a => getTreatmentBase(a.treatment) === selectedTreatment);
   }, [analysesWithCalc, selectedTreatment]);
 
-  // Statistics
-  const stats = useMemo(
-    () => calcTreatmentStats(selectedTreatment === 'Todos' ? analysesWithCalc : filteredAnalyses),
-    [analysesWithCalc, filteredAnalyses, selectedTreatment]
+  // Statistics — always compute from ALL data for charts, but also provide filtered stats
+  const allStats = useMemo(
+    () => calcTreatmentStats(analysesWithCalc),
+    [analysesWithCalc]
+  );
+
+  const filteredStats = useMemo(
+    () => selectedTreatment === 'Todos' ? allStats : calcTreatmentStats(filteredAnalyses),
+    [allStats, filteredAnalyses, selectedTreatment]
   );
 
   return {
@@ -100,6 +128,9 @@ export function useAnalyses() {
     addAnalysis,
     updateAnalysis,
     deleteAnalysis,
-    stats,
+    updateAllAreas,
+    resetData,
+    allStats,
+    stats: filteredStats,
   };
 }
