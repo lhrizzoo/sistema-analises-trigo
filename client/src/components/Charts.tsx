@@ -127,11 +127,6 @@ export default function Charts({ analyses }: ChartsProps) {
   const avgMoisture = chartData.reduce((s, d) => s + d.moisture, 0) / chartData.length;
   const avgPMS = chartData.reduce((s, d) => s + d.pms, 0) / chartData.length;
   const avgCorrected = chartData.reduce((s, d) => s + d.correctedWeight, 0) / chartData.length;
-  // Average productivity (only for entries with data)
-  const productivityEntries = chartData.filter(d => d.hasProductivity);
-  const avgProductivity = productivityEntries.length > 0 
-    ? productivityEntries.reduce((s, d) => s + d.productivity, 0) / productivityEntries.length 
-    : 0;
 
   // Dynamic sizing based on number of items
   const count = chartData.length;
@@ -189,7 +184,6 @@ export default function Charts({ analyses }: ChartsProps) {
                 <XAxis {...xAxisProps} />
                 <YAxis {...yAxisProps} />
                 <Tooltip content={<CustomTooltip />} />
-                {avgProductivity > 0 && <ReferenceLine y={avgProductivity} stroke="#CC3311" strokeDasharray="4 4" strokeWidth={1.5} label={{ value: `Média: ${avgProductivity.toFixed(1)}kg/ha`, position: 'insideTopRight', fontSize: 9, fill: '#CC3311' }} />}
                 <Bar dataKey="productivity" name="kg/ha" radius={[3, 3, 0, 0]} maxBarSize={barSize}>
                   {chartData.map((entry, idx) => (
                     <Cell
