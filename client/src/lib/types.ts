@@ -7,6 +7,7 @@ export interface Analysis {
   moisture: number;
   seedWeight1000: number;
   harvestedArea: number | null;
+  treatmentBase: string;
 }
 
 export interface AnalysisWithCalculations extends Analysis {
