@@ -7,6 +7,7 @@ export interface Analysis {
   moisture: number;
   seedWeight1000: number;
   harvestedArea: number | null;
+  treatmentBase?: string; // Original treatment base for filtering (e.g., "Foco" from "Foco 1")
 }
 
 export interface AnalysisWithCalculations extends Analysis {

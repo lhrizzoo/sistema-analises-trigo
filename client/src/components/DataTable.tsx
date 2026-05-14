@@ -2,9 +2,9 @@
  * Design: Precision Agriculture Dashboard
  * Tabela de dados com cabeçalho verde escuro, campos calculados destacados
  * Colunas de resultado com fundo verde-menta claro
- * Edição in-place: campos de identificação (tratamento, cultivar, rep.) são protegidos
- * Apenas campos numéricos (peso, umidade, PMS, área) são editáveis
- * Confirmação visual de salvamento com toast
+ * Edição in-place: todos os campos são editáveis
+ * O registro permanece no mesmo grupo (aba) mesmo se o nome do tratamento mudar
+ * porque o filtro usa treatmentBase (original) e não o nome atual
  */
 import { useState, useRef, useEffect } from 'react';
 import { Pencil, Trash2, Check, X, Calculator, CopyPlus, AlertTriangle } from 'lucide-react';
@@ -89,7 +89,8 @@ export default function DataTable({ analyses, onUpdate, onDelete, onAdd, onUpdat
       return;
     }
 
-    // Update only the data fields, preserving treatment/cultivar/repetition identity
+    // Update all fields including treatment name
+    // treatmentBase is preserved automatically by useAnalyses
     onUpdate(editingId, {
       treatment: editForm.treatment.trim(),
       cultivar: editForm.cultivar.trim(),
@@ -244,13 +245,14 @@ export default function DataTable({ analyses, onUpdate, onDelete, onAdd, onUpdat
                   >
                     {isEditing ? (
                       <>
-                        {/* Treatment, Cultivar, Repetition - EDITABLE but highlighted */}
+                        {/* All fields EDITABLE during edit mode */}
                         <td className="px-2 py-1.5">
                           <input
                             className={inputClassSmall}
                             value={editForm.treatment}
                             onChange={e => setEditForm(p => ({ ...p, treatment: e.target.value }))}
                             onKeyDown={handleKeyDown}
+                            autoFocus
                           />
                         </td>
                         <td className="px-2 py-1.5">
@@ -269,7 +271,7 @@ export default function DataTable({ analyses, onUpdate, onDelete, onAdd, onUpdat
                             onKeyDown={handleKeyDown}
                           />
                         </td>
-                        {/* Numeric fields - main edit targets */}
+                        {/* Numeric fields */}
                         <td className="px-2 py-1.5">
                           <input
                             className={inputClassSmall}
@@ -278,7 +280,6 @@ export default function DataTable({ analyses, onUpdate, onDelete, onAdd, onUpdat
                             value={editForm.sampleWeight}
                             onChange={e => setEditForm(p => ({ ...p, sampleWeight: e.target.value }))}
                             onKeyDown={handleKeyDown}
-                            autoFocus
                           />
                         </td>
                         <td className="px-2 py-1.5">
