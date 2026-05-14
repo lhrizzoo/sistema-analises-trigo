@@ -2,10 +2,13 @@
  * Design: Precision Agriculture Dashboard
  * Tabela de dados com cabeçalho verde escuro, campos calculados destacados
  * Colunas de resultado com fundo verde-menta claro
- * NOVO: Funcionalidade de aplicar área colhida em massa
+ * Edição in-place: campos de identificação (tratamento, cultivar, rep.) são protegidos
+ * Apenas campos numéricos (peso, umidade, PMS, área) são editáveis
+ * Confirmação visual de salvamento com toast
  */
-import { useState } from 'react';
-import { Pencil, Trash2, Check, X, Calculator, CopyPlus } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Pencil, Trash2, Check, X, Calculator, CopyPlus, AlertTriangle } from 'lucide-react';
+import { toast } from 'sonner';
 import type { Analysis, AnalysisWithCalculations } from '@/lib/types';
 
 interface DataTableProps {
@@ -32,9 +35,21 @@ export default function DataTable({ analyses, onUpdate, onDelete, onAdd, onUpdat
   const [editForm, setEditForm] = useState(emptyForm);
   const [bulkArea, setBulkArea] = useState('');
   const [showBulkArea, setShowBulkArea] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const editRowRef = useRef<HTMLTableRowElement>(null);
+
+  // Scroll to editing row when entering edit mode
+  useEffect(() => {
+    if (editingId && editRowRef.current) {
+      editRowRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [editingId]);
 
   const handleAdd = () => {
-    if (!form.treatment.trim() || !form.sampleWeight || !form.moisture || !form.seedWeight1000) return;
+    if (!form.treatment.trim() || !form.sampleWeight || !form.moisture || !form.seedWeight1000) {
+      toast.error('Preencha pelo menos: Tratamento, Peso, Umidade e PMS');
+      return;
+    }
     onAdd({
       treatment: form.treatment.trim(),
       cultivar: form.cultivar.trim(),
@@ -45,9 +60,12 @@ export default function DataTable({ analyses, onUpdate, onDelete, onAdd, onUpdat
       harvestedArea: form.harvestedArea ? parseFloat(form.harvestedArea) : null,
     });
     setForm(emptyForm);
+    toast.success('Registro adicionado com sucesso');
   };
 
   const startEdit = (a: AnalysisWithCalculations) => {
+    // Cancel any pending delete confirmation
+    setConfirmDeleteId(null);
     setEditingId(a.id);
     setEditForm({
       treatment: a.treatment,
@@ -62,19 +80,47 @@ export default function DataTable({ analyses, onUpdate, onDelete, onAdd, onUpdat
 
   const saveEdit = () => {
     if (!editingId) return;
+    const newWeight = parseFloat(editForm.sampleWeight);
+    const newMoisture = parseFloat(editForm.moisture);
+    const newPMS = parseFloat(editForm.seedWeight1000);
+    
+    if (isNaN(newWeight) || isNaN(newMoisture) || isNaN(newPMS)) {
+      toast.error('Valores numéricos inválidos');
+      return;
+    }
+
+    // Update only the data fields, preserving treatment/cultivar/repetition identity
     onUpdate(editingId, {
       treatment: editForm.treatment.trim(),
       cultivar: editForm.cultivar.trim(),
       repetition: editForm.repetition.trim(),
-      sampleWeight: parseFloat(editForm.sampleWeight) || 0,
-      moisture: parseFloat(editForm.moisture) || 0,
-      seedWeight1000: parseFloat(editForm.seedWeight1000) || 0,
+      sampleWeight: newWeight,
+      moisture: newMoisture,
+      seedWeight1000: newPMS,
       harvestedArea: editForm.harvestedArea ? parseFloat(editForm.harvestedArea) : null,
     });
+    
+    toast.success(`"${editForm.treatment}" atualizado com sucesso`);
     setEditingId(null);
   };
 
-  const cancelEdit = () => setEditingId(null);
+  const cancelEdit = () => {
+    setEditingId(null);
+    toast.info('Edição cancelada');
+  };
+
+  const handleDelete = (id: string, name: string) => {
+    if (confirmDeleteId === id) {
+      onDelete(id);
+      setConfirmDeleteId(null);
+      toast.success(`"${name}" excluído`);
+    } else {
+      setConfirmDeleteId(id);
+      toast.warning(`Clique novamente para confirmar a exclusão de "${name}"`, { duration: 3000 });
+      // Auto-cancel after 3 seconds
+      setTimeout(() => setConfirmDeleteId(prev => prev === id ? null : prev), 3000);
+    }
+  };
 
   const handleBulkArea = () => {
     const area = parseFloat(bulkArea);
@@ -82,6 +128,12 @@ export default function DataTable({ analyses, onUpdate, onDelete, onAdd, onUpdat
     onUpdateAllAreas(area);
     setBulkArea('');
     setShowBulkArea(false);
+    toast.success(`Área de ${area} m² aplicada a todos os registros visíveis`);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') saveEdit();
+    if (e.key === 'Escape') cancelEdit();
   };
 
   const inputClass = "w-full px-2 py-1.5 text-sm border rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-[var(--ring)] font-data";
@@ -173,71 +225,186 @@ export default function DataTable({ analyses, onUpdate, onDelete, onAdd, onUpdat
               </tr>
             </thead>
             <tbody>
-              {analyses.map((a, idx) => (
-                <tr
-                  key={a.id}
-                  className="border-b transition-colors duration-100 hover:bg-[var(--muted)]"
-                  style={{
-                    borderColor: 'var(--border)',
-                    background: idx % 2 === 0 ? 'var(--card)' : 'var(--muted)',
-                  }}
-                >
-                  {editingId === a.id ? (
-                    <>
-                      <td className="px-2 py-1.5"><input className={inputClassSmall} value={editForm.treatment} onChange={e => setEditForm(p => ({ ...p, treatment: e.target.value }))} /></td>
-                      <td className="px-2 py-1.5"><input className={inputClassSmall} value={editForm.cultivar} onChange={e => setEditForm(p => ({ ...p, cultivar: e.target.value }))} /></td>
-                      <td className="px-2 py-1.5"><input className={inputClassSmall} value={editForm.repetition} onChange={e => setEditForm(p => ({ ...p, repetition: e.target.value }))} /></td>
-                      <td className="px-2 py-1.5"><input className={inputClassSmall} type="number" step="0.0001" value={editForm.sampleWeight} onChange={e => setEditForm(p => ({ ...p, sampleWeight: e.target.value }))} /></td>
-                      <td className="px-2 py-1.5"><input className={inputClassSmall} type="number" step="0.01" value={editForm.moisture} onChange={e => setEditForm(p => ({ ...p, moisture: e.target.value }))} /></td>
-                      <td className="px-2 py-1.5"><input className={inputClassSmall} type="number" step="0.01" value={editForm.seedWeight1000} onChange={e => setEditForm(p => ({ ...p, seedWeight1000: e.target.value }))} /></td>
-                      <td className="px-2 py-1.5"><input className={inputClassSmall} type="number" step="0.01" value={editForm.harvestedArea} onChange={e => setEditForm(p => ({ ...p, harvestedArea: e.target.value }))} placeholder="m²" /></td>
-                      <td className="px-3 py-1.5 text-right font-data text-xs" style={{ background: 'var(--result-bg)' }}>—</td>
-                      <td className="px-3 py-1.5 text-right font-data text-xs" style={{ background: 'var(--result-bg)' }}>—</td>
-                      <td className="px-2 py-1.5 text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <button onClick={saveEdit} className="p-1 rounded hover:bg-green-100 text-green-700" title="Salvar"><Check className="w-3.5 h-3.5" /></button>
-                          <button onClick={cancelEdit} className="p-1 rounded hover:bg-red-100 text-red-500" title="Cancelar"><X className="w-3.5 h-3.5" /></button>
-                        </div>
-                      </td>
-                    </>
-                  ) : (
-                    <>
-                      <td className="px-3 py-2 font-medium text-sm">{a.treatment}</td>
-                      <td className="px-3 py-2 text-sm" style={{ color: 'var(--muted-foreground)' }}>{a.cultivar || '—'}</td>
-                      <td className="px-3 py-2 font-data text-sm">{a.repetition || '—'}</td>
-                      <td className="px-3 py-2 text-right font-data text-sm">{a.sampleWeight.toFixed(4)}</td>
-                      <td className="px-3 py-2 text-right font-data text-sm">{a.moisture.toFixed(2)}</td>
-                      <td className="px-3 py-2 text-right font-data text-sm">{a.seedWeight1000.toFixed(2)}</td>
-                      <td className="px-3 py-2 text-right font-data text-sm">{a.harvestedArea?.toFixed(2) ?? '—'}</td>
-                      <td className="px-3 py-2 text-right font-data text-sm font-medium" style={{ background: 'var(--result-bg)', color: 'var(--accent-foreground)' }}>
-                        {a.correctedWeight14.toFixed(3)}
-                      </td>
-                      <td className="px-3 py-2 text-right font-data text-sm font-medium" style={{ background: 'var(--result-bg)', color: 'var(--accent-foreground)' }}>
-                        {a.productivityKgHa !== null ? a.productivityKgHa.toFixed(1) : '—'}
-                      </td>
-                      <td className="px-2 py-2 text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <button onClick={() => startEdit(a)} className="p-1.5 rounded-md hover:bg-[var(--muted)] transition-colors" title="Editar registro">
-                            <Pencil className="w-3.5 h-3.5" style={{ color: 'var(--primary)' }} />
-                          </button>
-                          <button onClick={() => onDelete(a.id)} className="p-1.5 rounded-md hover:bg-red-50 transition-colors" title="Excluir registro">
-                            <Trash2 className="w-3.5 h-3.5 text-red-500" />
-                          </button>
-                        </div>
-                      </td>
-                    </>
-                  )}
-                </tr>
-              ))}
+              {analyses.map((a, idx) => {
+                const isEditing = editingId === a.id;
+                const isConfirmingDelete = confirmDeleteId === a.id;
+
+                return (
+                  <tr
+                    key={a.id}
+                    ref={isEditing ? editRowRef : undefined}
+                    className={`border-b transition-colors duration-100 ${isEditing ? 'ring-2 ring-inset' : 'hover:bg-[var(--muted)]'}`}
+                    style={{
+                      borderColor: 'var(--border)',
+                      background: isEditing
+                        ? 'oklch(0.96 0.02 145)' // light green highlight for editing row
+                        : idx % 2 === 0 ? 'var(--card)' : 'var(--muted)',
+                      ...(isEditing ? { '--tw-ring-color': 'var(--primary)' } as React.CSSProperties : {}),
+                    }}
+                  >
+                    {isEditing ? (
+                      <>
+                        {/* Treatment, Cultivar, Repetition - EDITABLE but highlighted */}
+                        <td className="px-2 py-1.5">
+                          <input
+                            className={inputClassSmall}
+                            value={editForm.treatment}
+                            onChange={e => setEditForm(p => ({ ...p, treatment: e.target.value }))}
+                            onKeyDown={handleKeyDown}
+                          />
+                        </td>
+                        <td className="px-2 py-1.5">
+                          <input
+                            className={inputClassSmall}
+                            value={editForm.cultivar}
+                            onChange={e => setEditForm(p => ({ ...p, cultivar: e.target.value }))}
+                            onKeyDown={handleKeyDown}
+                          />
+                        </td>
+                        <td className="px-2 py-1.5">
+                          <input
+                            className={inputClassSmall}
+                            value={editForm.repetition}
+                            onChange={e => setEditForm(p => ({ ...p, repetition: e.target.value }))}
+                            onKeyDown={handleKeyDown}
+                          />
+                        </td>
+                        {/* Numeric fields - main edit targets */}
+                        <td className="px-2 py-1.5">
+                          <input
+                            className={inputClassSmall}
+                            type="number"
+                            step="0.0001"
+                            value={editForm.sampleWeight}
+                            onChange={e => setEditForm(p => ({ ...p, sampleWeight: e.target.value }))}
+                            onKeyDown={handleKeyDown}
+                            autoFocus
+                          />
+                        </td>
+                        <td className="px-2 py-1.5">
+                          <input
+                            className={inputClassSmall}
+                            type="number"
+                            step="0.01"
+                            value={editForm.moisture}
+                            onChange={e => setEditForm(p => ({ ...p, moisture: e.target.value }))}
+                            onKeyDown={handleKeyDown}
+                          />
+                        </td>
+                        <td className="px-2 py-1.5">
+                          <input
+                            className={inputClassSmall}
+                            type="number"
+                            step="0.01"
+                            value={editForm.seedWeight1000}
+                            onChange={e => setEditForm(p => ({ ...p, seedWeight1000: e.target.value }))}
+                            onKeyDown={handleKeyDown}
+                          />
+                        </td>
+                        <td className="px-2 py-1.5">
+                          <input
+                            className={inputClassSmall}
+                            type="number"
+                            step="0.01"
+                            value={editForm.harvestedArea}
+                            onChange={e => setEditForm(p => ({ ...p, harvestedArea: e.target.value }))}
+                            onKeyDown={handleKeyDown}
+                            placeholder="m²"
+                          />
+                        </td>
+                        {/* Calculated fields show preview during edit */}
+                        <td className="px-3 py-1.5 text-right font-data text-xs" style={{ background: 'var(--result-bg)' }}>
+                          {(() => {
+                            const w = parseFloat(editForm.sampleWeight);
+                            const m = parseFloat(editForm.moisture);
+                            if (!isNaN(w) && !isNaN(m)) {
+                              return ((w * (100 - m)) / 86).toFixed(3);
+                            }
+                            return '—';
+                          })()}
+                        </td>
+                        <td className="px-3 py-1.5 text-right font-data text-xs" style={{ background: 'var(--result-bg)' }}>
+                          {(() => {
+                            const w = parseFloat(editForm.sampleWeight);
+                            const m = parseFloat(editForm.moisture);
+                            const area = parseFloat(editForm.harvestedArea);
+                            if (!isNaN(w) && !isNaN(m) && !isNaN(area) && area > 0) {
+                              const corrected = (w * (100 - m)) / 86;
+                              return ((corrected / area) * 10000).toFixed(1);
+                            }
+                            return '—';
+                          })()}
+                        </td>
+                        <td className="px-2 py-1.5 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              onClick={saveEdit}
+                              className="p-1.5 rounded-md bg-green-600 text-white hover:bg-green-700 transition-colors"
+                              title="Salvar (Enter)"
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={cancelEdit}
+                              className="p-1.5 rounded-md bg-red-500 text-white hover:bg-red-600 transition-colors"
+                              title="Cancelar (Esc)"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td className="px-3 py-2 font-medium text-sm">{a.treatment}</td>
+                        <td className="px-3 py-2 text-sm" style={{ color: 'var(--muted-foreground)' }}>{a.cultivar || '—'}</td>
+                        <td className="px-3 py-2 font-data text-sm">{a.repetition || '—'}</td>
+                        <td className="px-3 py-2 text-right font-data text-sm">{a.sampleWeight.toFixed(4)}</td>
+                        <td className="px-3 py-2 text-right font-data text-sm">{a.moisture.toFixed(2)}</td>
+                        <td className="px-3 py-2 text-right font-data text-sm">{a.seedWeight1000.toFixed(2)}</td>
+                        <td className="px-3 py-2 text-right font-data text-sm">{a.harvestedArea?.toFixed(2) ?? '—'}</td>
+                        <td className="px-3 py-2 text-right font-data text-sm font-medium" style={{ background: 'var(--result-bg)', color: 'var(--accent-foreground)' }}>
+                          {a.correctedWeight14.toFixed(3)}
+                        </td>
+                        <td className="px-3 py-2 text-right font-data text-sm font-medium" style={{ background: 'var(--result-bg)', color: 'var(--accent-foreground)' }}>
+                          {a.productivityKgHa !== null ? a.productivityKgHa.toFixed(1) : '—'}
+                        </td>
+                        <td className="px-2 py-2 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              onClick={() => startEdit(a)}
+                              className="p-1.5 rounded-md hover:bg-[var(--muted)] transition-colors"
+                              title="Editar registro"
+                            >
+                              <Pencil className="w-3.5 h-3.5" style={{ color: 'var(--primary)' }} />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(a.id, a.treatment)}
+                              className={`p-1.5 rounded-md transition-colors ${isConfirmingDelete ? 'bg-red-100 ring-2 ring-red-400' : 'hover:bg-red-50'}`}
+                              title={isConfirmingDelete ? 'Clique novamente para confirmar exclusão' : 'Excluir registro'}
+                            >
+                              {isConfirmingDelete ? (
+                                <AlertTriangle className="w-3.5 h-3.5 text-red-600 animate-pulse" />
+                              ) : (
+                                <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                              )}
+                            </button>
+                          </div>
+                        </td>
+                      </>
+                    )}
+                  </tr>
+                );
+              })}
               {/* Add row */}
               <tr className="border-t-2" style={{ borderColor: 'var(--primary)', background: 'var(--card)' }}>
-                <td className="px-2 py-2"><input className={inputClass} placeholder="Tratamento" value={form.treatment} onChange={e => setForm(p => ({ ...p, treatment: e.target.value }))} /></td>
-                <td className="px-2 py-2"><input className={inputClass} placeholder="Cultivar" value={form.cultivar} onChange={e => setForm(p => ({ ...p, cultivar: e.target.value }))} /></td>
-                <td className="px-2 py-2"><input className={inputClass} placeholder="Rep." value={form.repetition} onChange={e => setForm(p => ({ ...p, repetition: e.target.value }))} /></td>
-                <td className="px-2 py-2"><input className={inputClass} type="number" step="0.0001" placeholder="0.0000" value={form.sampleWeight} onChange={e => setForm(p => ({ ...p, sampleWeight: e.target.value }))} /></td>
-                <td className="px-2 py-2"><input className={inputClass} type="number" step="0.01" placeholder="0.00" value={form.moisture} onChange={e => setForm(p => ({ ...p, moisture: e.target.value }))} /></td>
-                <td className="px-2 py-2"><input className={inputClass} type="number" step="0.01" placeholder="0.00" value={form.seedWeight1000} onChange={e => setForm(p => ({ ...p, seedWeight1000: e.target.value }))} /></td>
-                <td className="px-2 py-2"><input className={inputClass} type="number" step="0.01" placeholder="m²" value={form.harvestedArea} onChange={e => setForm(p => ({ ...p, harvestedArea: e.target.value }))} /></td>
+                <td className="px-2 py-2"><input className={inputClass} placeholder="Tratamento" value={form.treatment} onChange={e => setForm(p => ({ ...p, treatment: e.target.value }))} onKeyDown={e => e.key === 'Enter' && handleAdd()} /></td>
+                <td className="px-2 py-2"><input className={inputClass} placeholder="Cultivar" value={form.cultivar} onChange={e => setForm(p => ({ ...p, cultivar: e.target.value }))} onKeyDown={e => e.key === 'Enter' && handleAdd()} /></td>
+                <td className="px-2 py-2"><input className={inputClass} placeholder="Rep." value={form.repetition} onChange={e => setForm(p => ({ ...p, repetition: e.target.value }))} onKeyDown={e => e.key === 'Enter' && handleAdd()} /></td>
+                <td className="px-2 py-2"><input className={inputClass} type="number" step="0.0001" placeholder="0.0000" value={form.sampleWeight} onChange={e => setForm(p => ({ ...p, sampleWeight: e.target.value }))} onKeyDown={e => e.key === 'Enter' && handleAdd()} /></td>
+                <td className="px-2 py-2"><input className={inputClass} type="number" step="0.01" placeholder="0.00" value={form.moisture} onChange={e => setForm(p => ({ ...p, moisture: e.target.value }))} onKeyDown={e => e.key === 'Enter' && handleAdd()} /></td>
+                <td className="px-2 py-2"><input className={inputClass} type="number" step="0.01" placeholder="0.00" value={form.seedWeight1000} onChange={e => setForm(p => ({ ...p, seedWeight1000: e.target.value }))} onKeyDown={e => e.key === 'Enter' && handleAdd()} /></td>
+                <td className="px-2 py-2"><input className={inputClass} type="number" step="0.01" placeholder="m²" value={form.harvestedArea} onChange={e => setForm(p => ({ ...p, harvestedArea: e.target.value }))} onKeyDown={e => e.key === 'Enter' && handleAdd()} /></td>
                 <td className="px-3 py-2" style={{ background: 'var(--result-bg)' }} />
                 <td className="px-3 py-2" style={{ background: 'var(--result-bg)' }} />
                 <td className="px-2 py-2 text-center">
