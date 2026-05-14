@@ -40,24 +40,11 @@ export function useAnalyses() {
   }, []);
 
   const addAnalysis = useCallback((analysis: Omit<Analysis, 'id'>) => {
-    updateAndSave(prev => {
-      const base = analysis.treatmentBase || getTreatmentBase(analysis.treatment);
-      return [...prev, { ...analysis, id: generateId(), treatmentBase: base }];
-    });
+    updateAndSave(prev => [...prev, { ...analysis, id: generateId() }]);
   }, [updateAndSave]);
 
   const updateAnalysis = useCallback((id: string, updates: Partial<Analysis>) => {
-    updateAndSave(prev => prev.map(a => {
-      if (a.id === id) {
-        const updated = { ...a, ...updates };
-        // Preserve original treatmentBase if not explicitly changed
-        if (!updates.treatmentBase && a.treatmentBase) {
-          updated.treatmentBase = a.treatmentBase;
-        }
-        return updated;
-      }
-      return a;
-    }));
+    updateAndSave(prev => prev.map(a => a.id === id ? { ...a, ...updates } : a));
   }, [updateAndSave]);
 
   const deleteAnalysis = useCallback((id: string) => {
@@ -71,7 +58,7 @@ export function useAnalyses() {
   const updateAllAreas = useCallback((area: number, treatmentFilter?: string) => {
     updateAndSave(prev => prev.map(a => {
       if (treatmentFilter && treatmentFilter !== 'Todos') {
-        const base = a.treatmentBase || getTreatmentBase(a.treatment);
+        const base = getTreatmentBase(a.treatment);
         if (base !== treatmentFilter) return a;
       }
       return { ...a, harvestedArea: area };
@@ -93,34 +80,30 @@ export function useAnalyses() {
     [analyses]
   );
 
-  // Get unique treatment base names (from treatmentBase field to preserve original grouping)
+  // Get unique treatment base names
   const treatmentNames = useMemo(() => {
     const bases = new Set<string>();
     for (const a of analyses) {
-      const base = a.treatmentBase || getTreatmentBase(a.treatment);
-      bases.add(base);
+      bases.add(getTreatmentBase(a.treatment));
     }
     return ['Todos', ...Array.from(bases).sort()];
   }, [analyses]);
 
-  // Treatment counts (using treatmentBase field)
+  // Treatment counts
   const treatmentCounts = useMemo(() => {
     const counts = new Map<string, number>();
     counts.set('Todos', analyses.length);
     for (const a of analyses) {
-      const base = a.treatmentBase || getTreatmentBase(a.treatment);
+      const base = getTreatmentBase(a.treatment);
       counts.set(base, (counts.get(base) || 0) + 1);
     }
     return counts;
   }, [analyses]);
 
-  // Filtered analyses (using treatmentBase field to preserve original grouping)
+  // Filtered analyses
   const filteredAnalyses = useMemo(() => {
     if (selectedTreatment === 'Todos') return analysesWithCalc;
-    return analysesWithCalc.filter(a => {
-      const base = a.treatmentBase || getTreatmentBase(a.treatment);
-      return base === selectedTreatment;
-    });
+    return analysesWithCalc.filter(a => getTreatmentBase(a.treatment) === selectedTreatment);
   }, [analysesWithCalc, selectedTreatment]);
 
   // Statistics — always compute from ALL data for charts, but also provide filtered stats
