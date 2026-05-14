@@ -2,7 +2,7 @@
  * Design: Precision Agriculture Dashboard
  * Layout vertical de página única com seções bem demarcadas
  * Fundo off-white, cards brancos, resultados em verde-menta
- * CORREÇÃO: Gráficos sempre usam allStats (todos os tratamentos)
+ * Gráficos mostram cada repetição individual como uma barra
  */
 import Header from '@/components/Header';
 import KPICards from '@/components/KPICards';
@@ -25,7 +25,6 @@ export default function Home() {
     updateAnalysis,
     deleteAnalysis,
     updateAllAreas,
-    allStats,
     stats,
   } = useAnalyses();
 
@@ -51,8 +50,8 @@ export default function Home() {
           onUpdateAllAreas={(area) => updateAllAreas(area, selectedTreatment)}
         />
 
-        {/* Gráficos SEMPRE usam allStats para mostrar todos os tratamentos */}
-        <Charts stats={selectedTreatment === 'Todos' ? allStats : stats} />
+        {/* Gráficos com cada repetição individual como barra */}
+        <Charts analyses={filteredAnalyses} />
 
         <StatsTable stats={stats} />
 

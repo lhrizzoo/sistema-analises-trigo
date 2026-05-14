@@ -67,7 +67,7 @@ export function calcTreatmentStats(analyses: AnalysisWithCalculations[]): Treatm
 
   const stats: TreatmentStats[] = [];
 
-  for (const [treatment, items] of groups) {
+  for (const [treatment, items] of Array.from(groups.entries())) {
     const moistures = items.map((i: AnalysisWithCalculations) => i.moisture);
     const seeds = items.map((i: AnalysisWithCalculations) => i.seedWeight1000);
     const corrected = items.map((i: AnalysisWithCalculations) => i.correctedWeight14);

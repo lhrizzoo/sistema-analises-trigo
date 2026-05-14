@@ -2,30 +2,34 @@
  * Design: Precision Agriculture Dashboard
  * Gráficos de barras profissionais com paleta acessível para daltônicos
  * Grid 2x2 em desktop, 1 coluna em mobile
- * CORREÇÃO: Todos os tratamentos sempre visíveis em todos os gráficos
- * CORREÇÃO: Produtividade mostra todos os tratamentos (0 para sem área)
+ * CADA REPETIÇÃO = UMA BARRA INDIVIDUAL no gráfico
+ * Cores agrupadas por tratamento base para fácil identificação
+ * Largura dinâmica com scroll horizontal para muitos registros
  */
 import { useMemo } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
   ReferenceLine, LabelList,
 } from 'recharts';
-import type { TreatmentStats } from '@/lib/types';
+import type { AnalysisWithCalculations } from '@/lib/types';
+import { getTreatmentBase } from '@/lib/calculations';
 import { getChartColor } from '@/lib/chartColors';
 
 interface ChartsProps {
-  stats: TreatmentStats[];
+  analyses: AnalysisWithCalculations[];
 }
 
-function ChartCard({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
+function ChartCard({ title, subtitle, children, minWidth }: { title: string; subtitle: string; children: React.ReactNode; minWidth?: number }) {
   return (
     <div className="rounded-lg border p-5" style={{ borderColor: 'var(--border)', background: 'var(--card)' }}>
       <div className="mb-4">
         <h3 className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{title}</h3>
         <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{subtitle}</p>
       </div>
-      <div className="w-full" style={{ height: 320 }}>
-        {children}
+      <div className="w-full overflow-x-auto" style={{ height: 420 }}>
+        <div style={{ minWidth: minWidth || '100%', height: '100%' }}>
+          {children}
+        </div>
       </div>
     </div>
   );
@@ -45,34 +49,71 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   );
 };
 
-// Custom label renderer for bar values
-const renderBarLabel = (props: any) => {
+// Custom label renderer for bar values - rotated for many bars
+const renderBarLabel = (props: any, count: number) => {
   const { x, y, width, value } = props;
-  if (value === undefined || value === null) return null;
+  if (value === undefined || value === null || value === 0) return null;
+  // Hide labels if too many bars and bars are narrow
+  if (count > 50 && width < 12) return null;
+  const displayValue = typeof value === 'number' ? (value >= 100 ? value.toFixed(0) : value.toFixed(1)) : value;
+  
+  if (count > 20) {
+    // Rotated labels for many bars
+    return (
+      <text
+        x={x + width / 2}
+        y={y - 4}
+        fill="var(--muted-foreground)"
+        textAnchor="end"
+        fontSize={7}
+        fontFamily="'JetBrains Mono', monospace"
+        transform={`rotate(-65, ${x + width / 2}, ${y - 4})`}
+      >
+        {displayValue}
+      </text>
+    );
+  }
   return (
     <text
       x={x + width / 2}
-      y={y - 6}
+      y={y - 5}
       fill="var(--muted-foreground)"
       textAnchor="middle"
       fontSize={9}
       fontFamily="'JetBrains Mono', monospace"
     >
-      {typeof value === 'number' ? (value >= 100 ? value.toFixed(0) : value.toFixed(1)) : value}
+      {displayValue}
     </text>
   );
 };
 
-export default function Charts({ stats }: ChartsProps) {
-  // Stable color map based on treatment name
+export default function Charts({ analyses }: ChartsProps) {
+  // Build color map: each treatment base gets a consistent color
   const colorMap = useMemo(() => {
     const map = new Map<string, string>();
-    const sortedTreatments = [...stats].sort((a, b) => a.treatment.localeCompare(b.treatment));
-    sortedTreatments.forEach((s, i) => map.set(s.treatment, getChartColor(i)));
+    const bases = new Set<string>();
+    for (const a of analyses) {
+      bases.add(getTreatmentBase(a.treatment));
+    }
+    const sortedBases = Array.from(bases).sort();
+    sortedBases.forEach((base, i) => map.set(base, getChartColor(i)));
     return map;
-  }, [stats]);
+  }, [analyses]);
 
-  if (stats.length === 0) {
+  // Build chart data: one entry per individual analysis (repetition)
+  const chartData = useMemo(() => {
+    return analyses.map(a => ({
+      name: a.treatment, // ex: "Foco 1", "Foco 2", etc.
+      treatmentBase: getTreatmentBase(a.treatment),
+      moisture: a.moisture,
+      pms: a.seedWeight1000,
+      correctedWeight: a.correctedWeight14,
+      productivity: a.productivityKgHa ?? 0,
+      hasProductivity: a.productivityKgHa !== null,
+    }));
+  }, [analyses]);
+
+  if (analyses.length === 0) {
     return (
       <div className="text-center py-12" style={{ color: 'var(--muted-foreground)' }}>
         <p className="text-sm">Nenhum dado disponível para gráficos.</p>
@@ -80,49 +121,26 @@ export default function Charts({ stats }: ChartsProps) {
     );
   }
 
-  // CORREÇÃO: Produtividade mostra TODOS os tratamentos, com 0 para os sem área
-  const hasAnyProductivity = stats.some(s => s.avgProductivityKgHa !== null);
-  const productivityData = stats.map(s => ({
-    name: s.treatment,
-    value: s.avgProductivityKgHa ?? 0,
-    hasData: s.avgProductivityKgHa !== null,
-  }));
+  const hasAnyProductivity = analyses.some(a => a.productivityKgHa !== null);
 
-  const moistureData = stats.map(s => ({
-    name: s.treatment,
-    value: s.avgMoisture,
-  }));
+  // Compute averages for reference lines
+  const avgMoisture = chartData.reduce((s, d) => s + d.moisture, 0) / chartData.length;
+  const avgPMS = chartData.reduce((s, d) => s + d.pms, 0) / chartData.length;
+  const avgCorrected = chartData.reduce((s, d) => s + d.correctedWeight, 0) / chartData.length;
 
-  const pmsData = stats.map(s => ({
-    name: s.treatment,
-    value: s.avgSeedWeight1000,
-  }));
-
-  const correctedData = stats.map(s => ({
-    name: s.treatment,
-    value: s.avgCorrectedWeight14,
-  }));
-
-  // Compute average for reference line
-  const avgMoisture = moistureData.length > 0
-    ? moistureData.reduce((s, d) => s + d.value, 0) / moistureData.length
-    : 0;
-  const avgPMS = pmsData.length > 0
-    ? pmsData.reduce((s, d) => s + d.value, 0) / pmsData.length
-    : 0;
-  const avgCorrected = correctedData.length > 0
-    ? correctedData.reduce((s, d) => s + d.value, 0) / correctedData.length
-    : 0;
-
-  // Dynamic bar size based on number of treatments
-  const barSize = stats.length <= 7 ? 40 : stats.length <= 14 ? 28 : 20;
+  // Dynamic sizing based on number of items
+  const count = chartData.length;
+  const barSize = count <= 8 ? 36 : count <= 15 ? 28 : count <= 30 ? 20 : count <= 50 ? 14 : 10;
+  
+  // Minimum width to ensure bars are readable - each bar needs ~25px minimum
+  const minChartWidth = count > 15 ? Math.max(count * 25, 600) : undefined;
 
   const xAxisProps = {
     dataKey: 'name' as const,
-    tick: { fontSize: stats.length > 10 ? 9 : 10, fill: 'var(--muted-foreground)' },
-    angle: stats.length > 8 ? -40 : -25,
+    tick: { fontSize: count > 40 ? 7 : count > 20 ? 8 : 10, fill: 'var(--muted-foreground)' },
+    angle: count > 8 ? -55 : -25,
     textAnchor: 'end' as const,
-    height: stats.length > 8 ? 70 : 55,
+    height: count > 30 ? 100 : count > 15 ? 85 : 65,
     interval: 0 as const,
   };
 
@@ -137,35 +155,47 @@ export default function Charts({ stats }: ChartsProps) {
     opacity: 0.6,
   };
 
+  const labelRenderer = (props: any) => renderBarLabel(props, count);
+
   return (
     <section className="mb-8" id="charts-container">
       <div className="section-label mb-3 flex items-center gap-2">
         <div className="w-1 h-4 rounded-full" style={{ background: 'var(--primary)' }} />
-        Gráficos Comparativos por Tratamento
+        Gráficos Comparativos — Cada Barra = 1 Repetição
+      </div>
+
+      {/* Legend */}
+      <div className="flex flex-wrap gap-3 mb-4 px-1">
+        {Array.from(colorMap.entries()).map(([base, color]) => (
+          <div key={base} className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded-sm" style={{ background: color }} />
+            <span className="text-xs font-medium" style={{ color: 'var(--foreground)' }}>{base}</span>
+          </div>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Produtividade */}
-        <ChartCard title="Produtividade (kg/ha)" subtitle="Média por tratamento — peso corrigido a 14%">
+        <ChartCard title="Produtividade (kg/ha)" subtitle="Cada barra = 1 repetição individual" minWidth={hasAnyProductivity ? minChartWidth : undefined}>
           {hasAnyProductivity ? (
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={productivityData} margin={{ top: 20, right: 10, left: 0, bottom: 5 }}>
+              <BarChart data={chartData} margin={{ top: 25, right: 10, left: 0, bottom: 5 }}>
                 <CartesianGrid {...gridProps} />
                 <XAxis {...xAxisProps} />
                 <YAxis {...yAxisProps} />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="value" name="kg/ha" radius={[4, 4, 0, 0]} maxBarSize={barSize}>
-                  {productivityData.map((entry) => (
+                <Bar dataKey="productivity" name="kg/ha" radius={[3, 3, 0, 0]} maxBarSize={barSize}>
+                  {chartData.map((entry, idx) => (
                     <Cell
-                      key={entry.name}
-                      fill={entry.hasData
-                        ? (colorMap.get(entry.name) || '#0077BB')
+                      key={idx}
+                      fill={entry.hasProductivity
+                        ? (colorMap.get(entry.treatmentBase) || '#0077BB')
                         : '#E0E0E0'
                       }
-                      opacity={entry.hasData ? 1 : 0.4}
+                      opacity={entry.hasProductivity ? 1 : 0.3}
                     />
                   ))}
-                  <LabelList dataKey="value" content={renderBarLabel} />
+                  <LabelList dataKey="productivity" content={labelRenderer} />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -186,57 +216,57 @@ export default function Charts({ stats }: ChartsProps) {
         </ChartCard>
 
         {/* Umidade */}
-        <ChartCard title="Umidade (%)" subtitle="Média por tratamento">
+        <ChartCard title="Umidade (%)" subtitle="Cada barra = 1 repetição individual" minWidth={minChartWidth}>
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={moistureData} margin={{ top: 20, right: 10, left: 0, bottom: 5 }}>
+            <BarChart data={chartData} margin={{ top: 25, right: 10, left: 0, bottom: 5 }}>
               <CartesianGrid {...gridProps} />
               <XAxis {...xAxisProps} />
               <YAxis {...yAxisProps} domain={['auto', 'auto']} />
               <Tooltip content={<CustomTooltip />} />
               <ReferenceLine y={avgMoisture} stroke="#CC3311" strokeDasharray="4 4" strokeWidth={1.5} label={{ value: `Média: ${avgMoisture.toFixed(1)}%`, position: 'insideTopRight', fontSize: 9, fill: '#CC3311' }} />
-              <Bar dataKey="value" name="Umidade %" radius={[4, 4, 0, 0]} maxBarSize={barSize}>
-                {moistureData.map((entry) => (
-                  <Cell key={entry.name} fill={colorMap.get(entry.name) || '#0077BB'} />
+              <Bar dataKey="moisture" name="Umidade %" radius={[3, 3, 0, 0]} maxBarSize={barSize}>
+                {chartData.map((entry, idx) => (
+                  <Cell key={idx} fill={colorMap.get(entry.treatmentBase) || '#0077BB'} />
                 ))}
-                <LabelList dataKey="value" content={renderBarLabel} />
+                <LabelList dataKey="moisture" content={labelRenderer} />
               </Bar>
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
 
         {/* PMS */}
-        <ChartCard title="Peso de Mil Sementes (g)" subtitle="Média por tratamento">
+        <ChartCard title="Peso de Mil Sementes (g)" subtitle="Cada barra = 1 repetição individual" minWidth={minChartWidth}>
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={pmsData} margin={{ top: 20, right: 10, left: 0, bottom: 5 }}>
+            <BarChart data={chartData} margin={{ top: 25, right: 10, left: 0, bottom: 5 }}>
               <CartesianGrid {...gridProps} />
               <XAxis {...xAxisProps} />
               <YAxis {...yAxisProps} domain={['auto', 'auto']} />
               <Tooltip content={<CustomTooltip />} />
               <ReferenceLine y={avgPMS} stroke="#CC3311" strokeDasharray="4 4" strokeWidth={1.5} label={{ value: `Média: ${avgPMS.toFixed(1)}g`, position: 'insideTopRight', fontSize: 9, fill: '#CC3311' }} />
-              <Bar dataKey="value" name="PMS (g)" radius={[4, 4, 0, 0]} maxBarSize={barSize}>
-                {pmsData.map((entry) => (
-                  <Cell key={entry.name} fill={colorMap.get(entry.name) || '#0077BB'} />
+              <Bar dataKey="pms" name="PMS (g)" radius={[3, 3, 0, 0]} maxBarSize={barSize}>
+                {chartData.map((entry, idx) => (
+                  <Cell key={idx} fill={colorMap.get(entry.treatmentBase) || '#0077BB'} />
                 ))}
-                <LabelList dataKey="value" content={renderBarLabel} />
+                <LabelList dataKey="pms" content={labelRenderer} />
               </Bar>
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
 
         {/* Peso Corrigido 14% */}
-        <ChartCard title="Peso Corrigido 14% (kg)" subtitle="Média por tratamento">
+        <ChartCard title="Peso Corrigido 14% (kg)" subtitle="Cada barra = 1 repetição individual" minWidth={minChartWidth}>
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={correctedData} margin={{ top: 20, right: 10, left: 0, bottom: 5 }}>
+            <BarChart data={chartData} margin={{ top: 25, right: 10, left: 0, bottom: 5 }}>
               <CartesianGrid {...gridProps} />
               <XAxis {...xAxisProps} />
               <YAxis {...yAxisProps} />
               <Tooltip content={<CustomTooltip />} />
               <ReferenceLine y={avgCorrected} stroke="#CC3311" strokeDasharray="4 4" strokeWidth={1.5} label={{ value: `Média: ${avgCorrected.toFixed(2)}kg`, position: 'insideTopRight', fontSize: 9, fill: '#CC3311' }} />
-              <Bar dataKey="value" name="Peso Corr. 14%" radius={[4, 4, 0, 0]} maxBarSize={barSize}>
-                {correctedData.map((entry) => (
-                  <Cell key={entry.name} fill={colorMap.get(entry.name) || '#0077BB'} />
+              <Bar dataKey="correctedWeight" name="Peso Corr. 14%" radius={[3, 3, 0, 0]} maxBarSize={barSize}>
+                {chartData.map((entry, idx) => (
+                  <Cell key={idx} fill={colorMap.get(entry.treatmentBase) || '#0077BB'} />
                 ))}
-                <LabelList dataKey="value" content={renderBarLabel} />
+                <LabelList dataKey="correctedWeight" content={labelRenderer} />
               </Bar>
             </BarChart>
           </ResponsiveContainer>
