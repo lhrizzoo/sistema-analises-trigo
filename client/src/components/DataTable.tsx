@@ -12,7 +12,7 @@ interface DataTableProps {
   analyses: AnalysisWithCalculations[];
   onUpdate: (id: string, updates: Partial<Analysis>) => void;
   onDelete: (id: string) => void;
-  onAdd: (analysis: Omit<Analysis, 'id'>) => void;
+  onAdd: (analysis: Omit<Analysis, 'id'> & { treatmentBase: string }) => void;
   onUpdateAllAreas?: (area: number) => void;
 }
 
@@ -35,14 +35,17 @@ export default function DataTable({ analyses, onUpdate, onDelete, onAdd, onUpdat
 
   const handleAdd = () => {
     if (!form.treatment.trim() || !form.sampleWeight || !form.moisture || !form.seedWeight1000) return;
+    const treatmentName = form.treatment.trim();
+    const base = treatmentName.replace(/\s*\d+$/, '').trim();
     onAdd({
-      treatment: form.treatment.trim(),
+      treatment: treatmentName,
       cultivar: form.cultivar.trim(),
       repetition: form.repetition.trim(),
       sampleWeight: parseFloat(form.sampleWeight),
       moisture: parseFloat(form.moisture),
       seedWeight1000: parseFloat(form.seedWeight1000),
       harvestedArea: form.harvestedArea ? parseFloat(form.harvestedArea) : null,
+      treatmentBase: base,
     });
     setForm(emptyForm);
   };
