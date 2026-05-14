@@ -1,0 +1,35 @@
+{
+  "build_command": "pnpm run build",
+  "capabilities": [],
+  "dev_command": "pnpm run dev",
+  "env_vars": {},
+  "experiments": null,
+  "git_remote": {
+    "repo_url": "s3://vida-prod-gitrepo/webdev-git/310519663347358258/CSvLYhqZnzMiWiWj5FWdQg",
+    "access_key_id": "ASIAZV3A2ECZCTCY7JA3",
+    "secret_access_key": "TdUtktjMC2ZD7ek8ihynH+pAmOseS40uCY3tPzyS",
+    "session_token": "IQoJb3JpZ2luX2VjEJn//////////wEaCXVzLWVhc3QtMSJIMEYCIQDP3LCws9W1sayhBAsFtFx2cszBmw0gwpnfC6z1II12WwIhAJ88MGZCDbvkiZp56/MiOqoC/+feNpPDYfodHUr6LksgKvYDCGIQBBoMNjY1Mzg2MDk4ODY2IgyakZ6uRygTp1PrFnIq0wM804WkbEEWRI8p/DS6ZRC412zu6gnLJ5MPxau6HsvnjbdVRyDqo8eYgHsfcCQUUdkgv+eM+WOMwdk3hr56v4w44lEaNxAnWxgEP7TwOQfQMz5hykpTuRnTopJBj7wEyX47UMVoX1C3ZEz6H1VP87toO4KQaJ+YXZ5jchDPExXbLKtjZU3juDNixraZGqBkRQi0DD+wF9Om1C7w4hZ4BNhvc4fgVR9wSF+f1tHliBaAWAMmSd6W9Pk4/fC3Uq+DfwasUSu0/UWap7NdhM/noNlERInkD4SINATVyv22Vwu9jDxL6GiIy2Of7cJljwQX1CUilEQxP0fSJ+79XUqNyZEuQCY4zqhPHyJ6TcZDp6d2lEglf6ktpg99OEESMzf9O6xv9HOPoxaINubqNJjZuV/cd+tXnpCZDj2ECdRV9z0bvy/iIP4tZouigw1EjlCy1vS4BTV7d8Kp/RnpWFPBksmjoLjoEnEmn1I3zGJmFq2n4br8DlemYa41pZGg0OYPCBYvEaOz8pqDp8+76rM3qATzU5gJ8moZp+bXBGoxYG+2gU5bCiTCS7SqLjGMG7NSSso8cTAG+v35zJKUdvbxVyW3Fuwsgs1kK+oPFLAUSObLnnDZXjCY8JfQBjqcAV0BWNW+JfNJooIa8uTpR2fp3/pGCUQt5+pLMmG5C3NE+kAtRGt0qfn2Hkp0PT/EZji30g5lcalyFYT0P+TL5kuPF/VmLOvxR0yU9C9PbdSSzPmDPm2WrVhTnUIe+Sx/+sZkahBeHMfQPGCCQfHdqpk6+0smFElRw53CJtkSiv+kgKDlwjUC+iJhFEqvczGAPbf2OZYDtd+XdDkyvg==",
+    "expiration": "2026-05-15T04:28:08.000Z"
+  },
+  "name": "sistema-analises-trigo",
+  "path": "/home/ubuntu/sistema-analises-trigo",
+  "port": 3000,
+  "secrets": {
+    "BUILT_IN_FORGE_API_KEY": "EaSHZzhEimwdjGiHxVe5Uz",
+    "BUILT_IN_FORGE_API_URL": "https://forge.manus.ai",
+    "JWT_SECRET": "iiYhVfnciLTCCE9T7rZTJU",
+    "OAUTH_SERVER_URL": "https://api.manus.im",
+    "OWNER_NAME": "Luiz Henrique Rizzo",
+    "OWNER_OPEN_ID": "RaphveD4j7p8foaefoyEmJ",
+    "VITE_ANALYTICS_ENDPOINT": "https://manus-analytics.com",
+    "VITE_ANALYTICS_WEBSITE_ID": "4560e585-5b3e-4180-9b92-cd9988842f16",
+    "VITE_APP_ID": "CSvLYhqZnzMiWiWj5FWdQg",
+    "VITE_APP_LOGO": "",
+    "VITE_APP_TITLE": "Sistema de Análise de Sementes - Trigo",
+    "VITE_FRONTEND_FORGE_API_KEY": "GfuSTDg9HwnPUzVDaEUu5b",
+    "VITE_FRONTEND_FORGE_API_URL": "https://forge.manus.ai",
+    "VITE_OAUTH_PORTAL_URL": "https://manus.im"
+  },
+  "template_id": "web-static",
+  "test_command": "pnpm test"
+}
