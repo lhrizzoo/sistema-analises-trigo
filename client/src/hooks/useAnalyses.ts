@@ -92,9 +92,9 @@ export function useAnalyses() {
         bases.add(base);
       }
     }
-    const result = ['Todos'];
-    if (hasBayer) result.push('Bayer');
-    result.push(...Array.from(bases).sort());
+    const result = ['Todos', ...Array.from(bases).sort()];
+    // Adicionar 'Bayer' se houver B1-B7
+    if (hasBayer) result.splice(1, 0, 'Bayer');
     return result;
   }, [analyses]);
 
@@ -119,6 +119,7 @@ export function useAnalyses() {
   const filteredAnalyses = useMemo(() => {
     if (selectedTreatment === 'Todos') return analysesWithCalc;
     if (selectedTreatment === 'Bayer') {
+      // Filtrar B1-B7
       return analysesWithCalc.filter(a => /^B[1-7]$/.test(getTreatmentBase(a.treatment)));
     }
     return analysesWithCalc.filter(a => getTreatmentBase(a.treatment) === selectedTreatment);
