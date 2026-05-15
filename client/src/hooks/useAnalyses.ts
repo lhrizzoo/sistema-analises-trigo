@@ -83,26 +83,44 @@ export function useAnalyses() {
   // Get unique treatment base names
   const treatmentNames = useMemo(() => {
     const bases = new Set<string>();
+    let hasBayer = false;
     for (const a of analyses) {
-      bases.add(getTreatmentBase(a.treatment));
+      const base = getTreatmentBase(a.treatment);
+      if (/^B[1-7]$/.test(base)) {
+        hasBayer = true;
+      } else {
+        bases.add(base);
+      }
     }
-    return ['Todos', ...Array.from(bases).sort()];
+    const result = ['Todos'];
+    if (hasBayer) result.push('Bayer');
+    result.push(...Array.from(bases).sort());
+    return result;
   }, [analyses]);
 
   // Treatment counts
   const treatmentCounts = useMemo(() => {
     const counts = new Map<string, number>();
     counts.set('Todos', analyses.length);
+    let bayerCount = 0;
     for (const a of analyses) {
       const base = getTreatmentBase(a.treatment);
-      counts.set(base, (counts.get(base) || 0) + 1);
+      if (/^B[1-7]$/.test(base)) {
+        bayerCount++;
+      } else {
+        counts.set(base, (counts.get(base) || 0) + 1);
+      }
     }
+    if (bayerCount > 0) counts.set('Bayer', bayerCount);
     return counts;
   }, [analyses]);
 
   // Filtered analyses
   const filteredAnalyses = useMemo(() => {
     if (selectedTreatment === 'Todos') return analysesWithCalc;
+    if (selectedTreatment === 'Bayer') {
+      return analysesWithCalc.filter(a => /^B[1-7]$/.test(getTreatmentBase(a.treatment)));
+    }
     return analysesWithCalc.filter(a => getTreatmentBase(a.treatment) === selectedTreatment);
   }, [analysesWithCalc, selectedTreatment]);
 
