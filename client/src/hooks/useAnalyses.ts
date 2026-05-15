@@ -3,7 +3,7 @@ import type { Analysis, AnalysisWithCalculations } from '@/lib/types';
 import { withCalculations, calcTreatmentStats, getTreatmentBase } from '@/lib/calculations';
 import { initialAnalyses } from '@/lib/initialData';
 
-const STORAGE_KEY = 'trigo-analyses-v1';
+const STORAGE_KEY = 'trigo-analyses-v2';
 
 function loadAnalyses(): Analysis[] {
   try {
