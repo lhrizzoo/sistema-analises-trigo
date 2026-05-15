@@ -95,39 +95,6 @@ export default function TreatmentFilter({ treatments, counts, selected, onSelect
           </button>
         )}
 
-        {/* Subgrupos B1-B7 quando Bayer está selecionado */}
-        {selected === 'Bayer' && groups['Bayer'] && (
-          <div className="w-full flex flex-wrap gap-2 pl-4 border-l-2" style={{ borderColor: 'var(--primary)' }}>
-            {groups['Bayer'].sort().map(b => {
-              const isActive = b === selected;
-              return (
-                <button
-                  key={b}
-                  onClick={() => onSelect(b)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-150"
-                  style={{
-                    background: isActive ? 'var(--primary)' : 'var(--card)',
-                    color: isActive ? 'var(--primary-foreground)' : 'var(--foreground)',
-                    border: isActive ? '1px solid var(--primary)' : '1px solid var(--border)',
-                    boxShadow: isActive ? '0 2px 8px rgba(0,0,0,0.12)' : 'none',
-                  }}
-                >
-                  {b}
-                  <span
-                    className="font-data text-xs px-1.5 py-0.5 rounded-full"
-                    style={{
-                      background: isActive ? 'rgba(255,255,255,0.2)' : 'var(--muted)',
-                      color: isActive ? 'var(--primary-foreground)' : 'var(--muted-foreground)',
-                    }}
-                  >
-                    {counts.get(b) || 0}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        )}
-
         {/* Outros tratamentos individuais */}
         {treatments.map(t => {
           if (t === 'Todos' || t.startsWith('B')) return null; // Skip Todos e Bayer items
