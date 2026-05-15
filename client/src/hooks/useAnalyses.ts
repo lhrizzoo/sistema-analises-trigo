@@ -83,18 +83,21 @@ export function useAnalyses() {
   // Get unique treatment base names
   const treatmentNames = useMemo(() => {
     const bases = new Set<string>();
-    let hasBayer = false;
+    const bayerItems = new Set<string>();
     for (const a of analyses) {
       const base = getTreatmentBase(a.treatment);
       if (/^B[1-7]$/.test(base)) {
-        hasBayer = true;
+        bayerItems.add(base);
       } else {
         bases.add(base);
       }
     }
-    const result = ['Todos', ...Array.from(bases).sort()];
-    // Adicionar 'Bayer' se houver B1-B7
-    if (hasBayer) result.splice(1, 0, 'Bayer');
+    const result = ['Todos'];
+    if (bayerItems.size > 0) {
+      result.push('Bayer');
+      result.push(...Array.from(bayerItems).sort());
+    }
+    result.push(...Array.from(bases).sort());
     return result;
   }, [analyses]);
 
@@ -107,6 +110,7 @@ export function useAnalyses() {
       const base = getTreatmentBase(a.treatment);
       if (/^B[1-7]$/.test(base)) {
         bayerCount++;
+        counts.set(base, (counts.get(base) || 0) + 1);
       } else {
         counts.set(base, (counts.get(base) || 0) + 1);
       }
