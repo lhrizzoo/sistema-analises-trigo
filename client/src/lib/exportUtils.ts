@@ -129,34 +129,6 @@ export function exportToPDF(
 }
 
 /**
-<<<<<<< Updated upstream
- * Exportar gráficos como imagem PNG - cada gráfico em um arquivo separado
- */
-export async function exportChartsAsImage(chartContainerId: string, filename = 'graficos-trigo') {
-  const container = document.getElementById(chartContainerId);
-  if (!container) return;
-
-  // Encontrar todos os ChartCard (div com classe rounded-lg que contém os gráficos)
-  const chartCards = container.querySelectorAll('div.rounded-lg.border');
-  if (chartCards.length === 0) return;
-
-  // Extrair nome da amostra do título ou usar padrão
-  const titleElement = container.querySelector('.section-label');
-  const sampleName = titleElement?.textContent?.trim() || 'graficos';
-
-  // Exportar cada gráfico individualmente
-  for (let i = 0; i < chartCards.length; i++) {
-    const card = chartCards[i] as HTMLElement;
-    const titleElement = card.querySelector('h3');
-    const chartTitle = titleElement?.textContent?.trim() || `grafico_${i + 1}`;
-    
-    // Sanitizar nome do arquivo
-    const sanitizedTitle = chartTitle
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '_')
-      .replace(/^_|_$/g, '');
-
-=======
  * Exportar cada gráfico como imagem PNG separada
  */
 export async function exportChartsAsImage(chartContainerId: string) {
@@ -170,29 +142,12 @@ export async function exportChartsAsImage(chartContainerId: string) {
 
   for (let i = 0; i < Math.min(chartCards.length, chartNames.length); i++) {
     const card = chartCards[i] as HTMLElement;
->>>>>>> Stashed changes
     try {
       const canvas = await html2canvas(card, {
         backgroundColor: '#ffffff',
         scale: 2,
         useCORS: true,
         logging: false,
-<<<<<<< Updated upstream
-        allowTaint: true,
-      });
-
-      canvas.toBlob((blob) => {
-        if (blob) {
-          const fileName = `${filename}_${sanitizedTitle}.png`;
-          saveAs(blob, fileName);
-        }
-      }, 'image/png', 0.95);
-
-      // Pequeno delay entre exportações para evitar problemas
-      await new Promise(resolve => setTimeout(resolve, 200));
-    } catch (error) {
-      console.error(`Erro ao exportar gráfico "${chartTitle}":`, error);
-=======
       });
 
       canvas.toBlob((blob) => {
@@ -202,7 +157,6 @@ export async function exportChartsAsImage(chartContainerId: string) {
       await new Promise(resolve => setTimeout(resolve, 300));
     } catch (error) {
       console.error(`Erro ao exportar gráfico ${chartNames[i]}:`, error);
->>>>>>> Stashed changes
     }
   }
 }
