@@ -129,19 +129,52 @@ export function exportToPDF(
 }
 
 /**
- * Exportar gráficos como imagem PNG
+ * Exportar gráficos como imagem PNG - cada gráfico em um arquivo separado
  */
 export async function exportChartsAsImage(chartContainerId: string, filename = 'graficos-trigo') {
-  const element = document.getElementById(chartContainerId);
-  if (!element) return;
+  const container = document.getElementById(chartContainerId);
+  if (!container) return;
 
-  const canvas = await html2canvas(element, {
-    backgroundColor: '#ffffff',
-    scale: 2,
-    useCORS: true,
-  });
+  // Encontrar todos os ChartCard (div com classe rounded-lg que contém os gráficos)
+  const chartCards = container.querySelectorAll('div.rounded-lg.border');
+  if (chartCards.length === 0) return;
 
-  canvas.toBlob((blob) => {
-    if (blob) saveAs(blob, `${filename}.png`);
-  }, 'image/png');
+  // Extrair nome da amostra do título ou usar padrão
+  const titleElement = container.querySelector('.section-label');
+  const sampleName = titleElement?.textContent?.trim() || 'graficos';
+
+  // Exportar cada gráfico individualmente
+  for (let i = 0; i < chartCards.length; i++) {
+    const card = chartCards[i] as HTMLElement;
+    const titleElement = card.querySelector('h3');
+    const chartTitle = titleElement?.textContent?.trim() || `grafico_${i + 1}`;
+    
+    // Sanitizar nome do arquivo
+    const sanitizedTitle = chartTitle
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_|_$/g, '');
+
+    try {
+      const canvas = await html2canvas(card, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        allowTaint: true,
+      });
+
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const fileName = `${filename}_${sanitizedTitle}.png`;
+          saveAs(blob, fileName);
+        }
+      }, 'image/png', 0.95);
+
+      // Pequeno delay entre exportações para evitar problemas
+      await new Promise(resolve => setTimeout(resolve, 200));
+    } catch (error) {
+      console.error(`Erro ao exportar gráfico "${chartTitle}":`, error);
+    }
+  }
 }
