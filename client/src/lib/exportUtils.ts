@@ -23,7 +23,7 @@ export async function exportToExcel(analyses: AnalysisWithCalculations[], stats:
     })));
     const wb = utils.book_new();
     utils.book_append_sheet(wb, ws, 'Análises');
-    writeFile(wb, 'analises-trigo.xlsx');
+    writeFile(wb, 'analises-soja.xlsx');
   } catch (error) {
     console.error('Erro ao exportar Excel:', error);
   }
@@ -36,7 +36,7 @@ export async function exportToPDF(analyses: AnalysisWithCalculations[], stats: T
   try {
     const doc = new jsPDF('p', 'mm', 'a4');
     doc.setFontSize(16);
-    doc.text('Relatório de Análises de Sementes - Trigo', 14, 15);
+    doc.text('Relatório de Análises de Sementes - Soja', 14, 15);
     doc.setFontSize(10);
     doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 14, 25);
 
@@ -61,7 +61,7 @@ export async function exportToPDF(analyses: AnalysisWithCalculations[], stats: T
       headStyles: { fillColor: [33, 115, 70], textColor: [255, 255, 255] },
     });
 
-    doc.save('relatorio-trigo.pdf');
+    doc.save('relatorio-soja.pdf');
   } catch (error) {
     console.error('Erro ao exportar PDF:', error);
   }
