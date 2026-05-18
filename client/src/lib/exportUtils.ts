@@ -68,8 +68,87 @@ export async function exportToPDF(analyses: AnalysisWithCalculations[], stats: T
 }
 
 /**
+ * Converter cores OKLCH para RGB (compatível com html2canvas)
+ */
+function convertOklchToRgb(element: HTMLElement): void {
+  const style = window.getComputedStyle(element);
+  
+  // Converte background color
+  const bgColor = style.backgroundColor;
+  if (bgColor && bgColor.includes('oklch')) {
+    const match = bgColor.match(/oklch\(([\d.]+)\s+([\d.]+)\s+([\d.]+)\)/);
+    if (match) {
+      const rgb = oklchToRgb(parseFloat(match[1]), parseFloat(match[2]), parseFloat(match[3]));
+      element.style.backgroundColor = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+    }
+  }
+  
+  // Converte text color
+  const textColor = style.color;
+  if (textColor && textColor.includes('oklch')) {
+    const match = textColor.match(/oklch\(([\d.]+)\s+([\d.]+)\s+([\d.]+)\)/);
+    if (match) {
+      const rgb = oklchToRgb(parseFloat(match[1]), parseFloat(match[2]), parseFloat(match[3]));
+      element.style.color = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+    }
+  }
+  
+  // Converte border color
+  const borderColor = style.borderColor;
+  if (borderColor && borderColor.includes('oklch')) {
+    const match = borderColor.match(/oklch\(([\d.]+)\s+([\d.]+)\s+([\d.]+)\)/);
+    if (match) {
+      const rgb = oklchToRgb(parseFloat(match[1]), parseFloat(match[2]), parseFloat(match[3]));
+      element.style.borderColor = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+    }
+  }
+
+  // Recursivamente converte filhos
+  for (let i = 0; i < element.children.length; i++) {
+    convertOklchToRgb(element.children[i] as HTMLElement);
+  }
+}
+
+/**
+ * Converter OKLCH para RGB
+ * Baseado em: https://bottosson.github.io/posts/oklab/
+ */
+function oklchToRgb(l: number, c: number, h: number): { r: number; g: number; b: number } {
+  const hRad = (h * Math.PI) / 180;
+  const a = c * Math.cos(hRad);
+  const b = c * Math.sin(hRad);
+
+  const l_ = l + 0.3963377774 * a + 0.2158037573 * b;
+  const m_ = l - 0.1055613458 * a - 0.0638541728 * b;
+  const s_ = l - 0.0894841775 * a - 1.291486575 * b;
+
+  const l3 = l_ * l_ * l_;
+  const m3 = m_ * m_ * m_;
+  const s3 = s_ * s_ * s_;
+
+  const r = 4.0767416621 * l3 - 3.3077363322 * m3 + 0.2309101289 * s3;
+  const g = -1.2684380046 * l3 + 2.6097574011 * m3 - 0.3413193761 * s3;
+  const bl = -0.0041960863 * l3 - 0.7034186147 * m3 + 1.707614701 * s3;
+
+  return {
+    r: Math.max(0, Math.min(255, Math.round(linearToSrgb(r) * 255))),
+    g: Math.max(0, Math.min(255, Math.round(linearToSrgb(g) * 255))),
+    b: Math.max(0, Math.min(255, Math.round(linearToSrgb(bl) * 255))),
+  };
+}
+
+/**
+ * Converter linear RGB para sRGB
+ */
+function linearToSrgb(x: number): number {
+  if (x <= 0.0031308) {
+    return 12.92 * x;
+  }
+  return 1.055 * Math.pow(x, 1 / 2.4) - 0.055;
+}
+
+/**
  * Exportar gráficos como imagens PNG
- * Usa html2canvas com configurações otimizadas para SVG/Recharts
  */
 export async function exportChartsAsImage(chartContainerId: string) {
   try {
@@ -101,8 +180,24 @@ export async function exportChartsAsImage(chartContainerId: string) {
       try {
         console.log(`Exportando gráfico ${chartName}...`);
 
-        // Renderiza diretamente o card
-        const canvas = await html2canvas(card, {
+        // Clona o card para não afetar a página
+        const clone = card.cloneNode(true) as HTMLElement;
+        clone.style.position = 'fixed';
+        clone.style.top = '-9999px';
+        clone.style.left = '-9999px';
+        clone.style.width = card.offsetWidth + 'px';
+        clone.style.height = card.offsetHeight + 'px';
+        clone.style.zIndex = '-9999';
+        document.body.appendChild(clone);
+
+        // Converte cores OKLCH para RGB
+        convertOklchToRgb(clone);
+
+        // Aguarda renderização do clone
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+        // Renderiza para canvas
+        const canvas = await html2canvas(clone, {
           backgroundColor: '#ffffff',
           scale: 2,
           useCORS: true,
@@ -120,6 +215,9 @@ export async function exportChartsAsImage(chartContainerId: string) {
             console.log(`✓ Gráfico ${chartName} exportado`);
           }
         }, 'image/png', 0.95);
+
+        // Remove o clone
+        document.body.removeChild(clone);
 
         // Aguarda entre exportações
         await new Promise(resolve => setTimeout(resolve, 800));
