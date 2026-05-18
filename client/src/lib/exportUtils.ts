@@ -68,80 +68,73 @@ export async function exportToPDF(analyses: AnalysisWithCalculations[], stats: T
 }
 
 /**
- * Exportar gráficos como imagens PNG - versão simplificada
- * Aguarda um tempo para os gráficos renderizarem completamente
+ * Exportar gráficos como imagens PNG
+ * Usa html2canvas com configurações otimizadas para SVG/Recharts
  */
 export async function exportChartsAsImage(chartContainerId: string) {
   try {
     const container = document.getElementById(chartContainerId);
     if (!container) {
       console.error('Container de gráficos não encontrado');
+      alert('Erro: Container de gráficos não encontrado');
       return;
     }
 
-    // Aguarda um pouco para garantir que os gráficos estão renderizados
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // Aguarda renderização completa
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // Encontra todos os ChartCard (divs com rounded-lg que contêm os gráficos)
-    const chartCards = container.querySelectorAll('div.rounded-lg');
+    // Encontra todos os cards de gráficos
+    const chartCards = Array.from(container.querySelectorAll('div.rounded-lg'));
     if (chartCards.length === 0) {
       console.error('Nenhum gráfico encontrado');
+      alert('Erro: Nenhum gráfico encontrado');
       return;
     }
 
     const chartNames = ['produtividade', 'umidade', 'pms', 'peso_corrigido'];
-    let exportedCount = 0;
+    let successCount = 0;
 
     for (let i = 0; i < Math.min(chartCards.length, chartNames.length); i++) {
       const card = chartCards[i] as HTMLElement;
-      
+      const chartName = chartNames[i];
+
       try {
-        // Clona o card para não afetar a página original
-        const clone = card.cloneNode(true) as HTMLElement;
-        clone.style.position = 'fixed';
-        clone.style.top = '-9999px';
-        clone.style.left = '-9999px';
-        clone.style.width = card.offsetWidth + 'px';
-        clone.style.height = card.offsetHeight + 'px';
-        clone.style.zIndex = '-9999';
-        document.body.appendChild(clone);
+        console.log(`Exportando gráfico ${chartName}...`);
 
-        // Aguarda um pouco para o clone renderizar
-        await new Promise(resolve => setTimeout(resolve, 300));
-
-        // Converte para canvas
-        const canvas = await html2canvas(clone, {
+        // Renderiza diretamente o card
+        const canvas = await html2canvas(card, {
           backgroundColor: '#ffffff',
           scale: 2,
           useCORS: true,
-          logging: false,
           allowTaint: true,
-          imageTimeout: 5000,
+          logging: false,
+          imageTimeout: 10000,
+          proxy: undefined,
         });
 
-        // Salva como PNG
+        // Converte para blob e salva
         canvas.toBlob((blob) => {
           if (blob) {
-            saveAs(blob, `grafico_${chartNames[i]}.png`);
-            exportedCount++;
-            console.log(`✓ Gráfico ${chartNames[i]} exportado com sucesso`);
+            saveAs(blob, `grafico_${chartName}.png`);
+            successCount++;
+            console.log(`✓ Gráfico ${chartName} exportado`);
           }
-        }, 'image/png');
+        }, 'image/png', 0.95);
 
-        // Remove o clone
-        document.body.removeChild(clone);
-
-        // Aguarda antes do próximo gráfico
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Aguarda entre exportações
+        await new Promise(resolve => setTimeout(resolve, 800));
       } catch (error) {
-        console.error(`Erro ao exportar gráfico ${chartNames[i]}:`, error);
+        console.error(`✗ Erro ao exportar ${chartName}:`, error);
       }
     }
 
-    if (exportedCount > 0) {
-      console.log(`${exportedCount} gráfico(s) exportado(s) com sucesso`);
+    if (successCount === 0) {
+      alert('Erro: Não foi possível exportar os gráficos. Verifique o console para mais detalhes.');
+    } else {
+      alert(`${successCount} gráfico(s) exportado(s) com sucesso!`);
     }
   } catch (error) {
     console.error('Erro geral ao exportar gráficos:', error);
+    alert('Erro ao exportar gráficos: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
   }
 }
