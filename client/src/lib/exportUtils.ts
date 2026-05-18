@@ -1,163 +1,147 @@
-import type { AnalysisWithCalculations, TreatmentStats } from './types';
 import { saveAs } from 'file-saver';
-import * as XLSX from 'xlsx';
+import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import html2canvas from 'html2canvas';
+import type { AnalysisWithCalculations, TreatmentStats } from '@/lib/types';
 
 /**
- * Exportar tabela de dados para Excel
+ * Exportar dados para Excel
  */
-export function exportToExcel(
-  analyses: AnalysisWithCalculations[],
-  stats: TreatmentStats[],
-  filename = 'analises-trigo'
-) {
-  const wb = XLSX.utils.book_new();
-
-  // Sheet 1: Dados completos
-  const dataRows = analyses.map(a => ({
-    'Tratamento': a.treatment,
-    'Cultivar': a.cultivar || '-',
-    'Repetição': a.repetition || '-',
-    'Peso da Amostra (kg)': a.sampleWeight,
-    'Umidade (%)': a.moisture,
-    'PMS (g)': a.seedWeight1000,
-    'Área Colhida (m²)': a.harvestedArea || '-',
-    'Peso Corrigido 14% (kg)': a.correctedWeight14,
-    'Produtividade (kg/ha)': a.productivityKgHa ?? '-',
-  }));
-  const ws1 = XLSX.utils.json_to_sheet(dataRows);
-  XLSX.utils.book_append_sheet(wb, ws1, 'Dados');
-
-  // Sheet 2: Estatísticas
-  const statsRows = stats.map(s => ({
-    'Tratamento': s.treatment,
-    'N° Repetições': s.count,
-    'Umidade Média (%)': s.avgMoisture,
-    'Umidade DP': s.stdMoisture,
-    'Umidade CV%': s.cvMoisture,
-    'PMS Médio (g)': s.avgSeedWeight1000,
-    'PMS DP': s.stdSeedWeight1000,
-    'PMS CV%': s.cvSeedWeight1000,
-    'Peso Corr. 14% Médio': s.avgCorrectedWeight14,
-    'Peso Corr. 14% DP': s.stdCorrectedWeight14,
-    'Peso Corr. 14% CV%': s.cvCorrectedWeight14,
-    'Produtividade Média (kg/ha)': s.avgProductivityKgHa ?? '-',
-    'Produtividade DP': s.stdProductivityKgHa ?? '-',
-    'Produtividade CV%': s.cvProductivityKgHa ?? '-',
-  }));
-  const ws2 = XLSX.utils.json_to_sheet(statsRows);
-  XLSX.utils.book_append_sheet(wb, ws2, 'Estatísticas');
-
-  const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-  const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-  saveAs(blob, `${filename}.xlsx`);
+export async function exportToExcel(analyses: AnalysisWithCalculations[], stats: TreatmentStats[]) {
+  try {
+    const { utils, writeFile } = await import('xlsx');
+    const ws = utils.json_to_sheet(analyses.map(a => ({
+      Tratamento: a.treatment,
+      Cultivar: a.cultivar || '—',
+      Rep: a.repetition,
+      'Peso (kg)': a.weight.toFixed(4),
+      'Umidade (%)': a.moisture.toFixed(2),
+      'PMS (g)': a.seedWeight1000.toFixed(2),
+      'Área (m²)': a.harvestedArea ? a.harvestedArea.toFixed(2) : '—',
+      'Peso Corr. 14%': a.correctedWeight14.toFixed(3),
+      'Produtividade (kg/ha)': a.productivityKgHa ? a.productivityKgHa.toFixed(1) : '—',
+    })));
+    const wb = utils.book_new();
+    utils.book_append_sheet(wb, ws, 'Análises');
+    writeFile(wb, 'analises-trigo.xlsx');
+  } catch (error) {
+    console.error('Erro ao exportar Excel:', error);
+  }
 }
 
 /**
- * Exportar relatório em PDF
+ * Exportar dados para PDF com tabela
  */
-export function exportToPDF(
-  analyses: AnalysisWithCalculations[],
-  stats: TreatmentStats[],
-  filename = 'relatorio-trigo'
-) {
-  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+export async function exportToPDF(analyses: AnalysisWithCalculations[], stats: TreatmentStats[]) {
+  try {
+    const doc = new jsPDF('p', 'mm', 'a4');
+    doc.setFontSize(16);
+    doc.text('Relatório de Análises de Sementes - Trigo', 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, 14, 25);
 
-  // Title
-  doc.setFontSize(16);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Relatório de Análise de Sementes — Trigo', 14, 15);
-
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}`, 14, 22);
-  doc.text(`Total de amostras: ${analyses.length}`, 14, 27);
-
-  // Table 1: Data
-  autoTable(doc, {
-    startY: 32,
-    head: [['Tratamento', 'Cultivar', 'Rep.', 'Peso (kg)', 'Umidade (%)', 'PMS (g)', 'Área (m²)', 'Peso Corr. 14%', 'Prod. (kg/ha)']],
-    body: analyses.map(a => [
+    const tableData = analyses.map(a => [
       a.treatment,
-      a.cultivar || '-',
-      a.repetition || '-',
-      a.sampleWeight.toFixed(4),
+      a.cultivar || '—',
+      a.repetition.toString(),
+      a.weight.toFixed(4),
       a.moisture.toFixed(2),
       a.seedWeight1000.toFixed(2),
-      a.harvestedArea?.toFixed(2) ?? '-',
+      a.harvestedArea ? a.harvestedArea.toFixed(2) : '—',
       a.correctedWeight14.toFixed(3),
-      a.productivityKgHa?.toFixed(1) ?? '-',
-    ]),
-    styles: { fontSize: 7, cellPadding: 1.5 },
-    headStyles: { fillColor: [34, 60, 34], textColor: [255, 255, 255], fontStyle: 'bold' },
-    alternateRowStyles: { fillColor: [245, 250, 245] },
-  });
+      a.productivityKgHa ? a.productivityKgHa.toFixed(1) : '—',
+    ]);
 
-  // New page for stats
-  doc.addPage();
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Estatísticas por Tratamento', 14, 15);
+    autoTable(doc, {
+      head: [['Tratamento', 'Cultivar', 'Rep', 'Peso (kg)', 'Umidade (%)', 'PMS (g)', 'Área (m²)', 'Peso Corr. 14%', 'Produtividade (kg/ha)']],
+      body: tableData,
+      startY: 35,
+      margin: 10,
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [33, 115, 70], textColor: [255, 255, 255] },
+    });
 
-  autoTable(doc, {
-    startY: 22,
-    head: [['Tratamento', 'N', 'Umid. Média', 'Umid. DP', 'Umid. CV%', 'PMS Médio', 'PMS DP', 'PMS CV%', 'Peso Corr. Médio', 'Peso Corr. DP', 'Peso Corr. CV%', 'Prod. Média', 'Prod. DP', 'Prod. CV%']],
-    body: stats.map(s => [
-      s.treatment,
-      s.count,
-      s.avgMoisture.toFixed(2),
-      s.stdMoisture.toFixed(2),
-      s.cvMoisture.toFixed(2),
-      s.avgSeedWeight1000.toFixed(2),
-      s.stdSeedWeight1000.toFixed(2),
-      s.cvSeedWeight1000.toFixed(2),
-      s.avgCorrectedWeight14.toFixed(3),
-      s.stdCorrectedWeight14.toFixed(3),
-      s.cvCorrectedWeight14.toFixed(2),
-      s.avgProductivityKgHa?.toFixed(1) ?? '-',
-      s.stdProductivityKgHa?.toFixed(1) ?? '-',
-      s.cvProductivityKgHa?.toFixed(2) ?? '-',
-    ]),
-    styles: { fontSize: 7, cellPadding: 1.5 },
-    headStyles: { fillColor: [34, 60, 34], textColor: [255, 255, 255], fontStyle: 'bold' },
-    alternateRowStyles: { fillColor: [245, 250, 245] },
-  });
-
-  doc.save(`${filename}.pdf`);
+    doc.save('relatorio-trigo.pdf');
+  } catch (error) {
+    console.error('Erro ao exportar PDF:', error);
+  }
 }
 
 /**
- * Exportar cada gráfico como imagem PNG separada
+ * Exportar gráficos como imagens PNG - versão simplificada
+ * Aguarda um tempo para os gráficos renderizarem completamente
  */
 export async function exportChartsAsImage(chartContainerId: string) {
-  const container = document.getElementById(chartContainerId);
-  if (!container) return;
-
-  const chartCards = container.querySelectorAll('div[class*="rounded-lg"]');
-  if (chartCards.length === 0) return;
-
-  const chartNames = ['umidade', 'pms', 'peso_corrigido', 'produtividade'];
-
-  for (let i = 0; i < Math.min(chartCards.length, chartNames.length); i++) {
-    const card = chartCards[i] as HTMLElement;
-    try {
-      const canvas = await html2canvas(card, {
-        backgroundColor: '#ffffff',
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        allowTaint: true,
-      });
-
-      canvas.toBlob((blob) => {
-        if (blob) saveAs(blob, `grafico_${chartNames[i]}.png`);
-      }, 'image/png');
-
-      await new Promise(resolve => setTimeout(resolve, 300));
-    } catch (error) {
-      console.error(`Erro ao exportar gráfico ${chartNames[i]}:`, error);
+  try {
+    const container = document.getElementById(chartContainerId);
+    if (!container) {
+      console.error('Container de gráficos não encontrado');
+      return;
     }
+
+    // Aguarda um pouco para garantir que os gráficos estão renderizados
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Encontra todos os ChartCard (divs com rounded-lg que contêm os gráficos)
+    const chartCards = container.querySelectorAll('div.rounded-lg');
+    if (chartCards.length === 0) {
+      console.error('Nenhum gráfico encontrado');
+      return;
+    }
+
+    const chartNames = ['produtividade', 'umidade', 'pms', 'peso_corrigido'];
+    let exportedCount = 0;
+
+    for (let i = 0; i < Math.min(chartCards.length, chartNames.length); i++) {
+      const card = chartCards[i] as HTMLElement;
+      
+      try {
+        // Clona o card para não afetar a página original
+        const clone = card.cloneNode(true) as HTMLElement;
+        clone.style.position = 'fixed';
+        clone.style.top = '-9999px';
+        clone.style.left = '-9999px';
+        clone.style.width = card.offsetWidth + 'px';
+        clone.style.height = card.offsetHeight + 'px';
+        clone.style.zIndex = '-9999';
+        document.body.appendChild(clone);
+
+        // Aguarda um pouco para o clone renderizar
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+        // Converte para canvas
+        const canvas = await html2canvas(clone, {
+          backgroundColor: '#ffffff',
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          allowTaint: true,
+          imageTimeout: 5000,
+        });
+
+        // Salva como PNG
+        canvas.toBlob((blob) => {
+          if (blob) {
+            saveAs(blob, `grafico_${chartNames[i]}.png`);
+            exportedCount++;
+            console.log(`✓ Gráfico ${chartNames[i]} exportado com sucesso`);
+          }
+        }, 'image/png');
+
+        // Remove o clone
+        document.body.removeChild(clone);
+
+        // Aguarda antes do próximo gráfico
+        await new Promise(resolve => setTimeout(resolve, 500));
+      } catch (error) {
+        console.error(`Erro ao exportar gráfico ${chartNames[i]}:`, error);
+      }
+    }
+
+    if (exportedCount > 0) {
+      console.log(`${exportedCount} gráfico(s) exportado(s) com sucesso`);
+    }
+  } catch (error) {
+    console.error('Erro geral ao exportar gráficos:', error);
   }
 }
