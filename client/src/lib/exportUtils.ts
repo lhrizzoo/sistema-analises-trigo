@@ -148,6 +148,7 @@ export async function exportChartsAsImage(chartContainerId: string) {
         scale: 2,
         useCORS: true,
         logging: false,
+        allowTaint: true,
       });
 
       canvas.toBlob((blob) => {
