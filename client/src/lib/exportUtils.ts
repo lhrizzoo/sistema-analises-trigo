@@ -129,6 +129,7 @@ export function exportToPDF(
 }
 
 /**
+<<<<<<< Updated upstream
  * Exportar gráficos como imagem PNG - cada gráfico em um arquivo separado
  */
 export async function exportChartsAsImage(chartContainerId: string, filename = 'graficos-trigo') {
@@ -155,12 +156,28 @@ export async function exportChartsAsImage(chartContainerId: string, filename = '
       .replace(/[^a-z0-9]+/g, '_')
       .replace(/^_|_$/g, '');
 
+=======
+ * Exportar cada gráfico como imagem PNG separada
+ */
+export async function exportChartsAsImage(chartContainerId: string) {
+  const container = document.getElementById(chartContainerId);
+  if (!container) return;
+
+  const chartCards = container.querySelectorAll('div[class*="rounded-lg"]');
+  if (chartCards.length === 0) return;
+
+  const chartNames = ['umidade', 'pms', 'peso_corrigido', 'produtividade'];
+
+  for (let i = 0; i < Math.min(chartCards.length, chartNames.length); i++) {
+    const card = chartCards[i] as HTMLElement;
+>>>>>>> Stashed changes
     try {
       const canvas = await html2canvas(card, {
         backgroundColor: '#ffffff',
         scale: 2,
         useCORS: true,
         logging: false,
+<<<<<<< Updated upstream
         allowTaint: true,
       });
 
@@ -175,6 +192,17 @@ export async function exportChartsAsImage(chartContainerId: string, filename = '
       await new Promise(resolve => setTimeout(resolve, 200));
     } catch (error) {
       console.error(`Erro ao exportar gráfico "${chartTitle}":`, error);
+=======
+      });
+
+      canvas.toBlob((blob) => {
+        if (blob) saveAs(blob, `grafico_${chartNames[i]}.png`);
+      }, 'image/png');
+
+      await new Promise(resolve => setTimeout(resolve, 300));
+    } catch (error) {
+      console.error(`Erro ao exportar gráfico ${chartNames[i]}:`, error);
+>>>>>>> Stashed changes
     }
   }
 }

@@ -21,7 +21,7 @@ export default function Header({ totalAnalyses }: HeaderProps) {
               Sistema de Análise de Sementes
             </h1>
             <p className="text-xs" style={{ color: 'rgba(255,255,255,0.65)' }}>
-              Trigo — Gestão e visualização de tratamentos
+              Soja — Gestão e visualização de tratamentos
             </p>
           </div>
         </div>
