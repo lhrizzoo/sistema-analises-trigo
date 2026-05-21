@@ -44,7 +44,14 @@ export function useAnalyses() {
   }, [updateAndSave]);
 
   const updateAnalysis = useCallback((id: string, updates: Partial<Analysis>) => {
-    updateAndSave(prev => prev.map(a => a.id === id ? { ...a, ...updates } : a));
+    updateAndSave(prev => prev.map(a => {
+      if (a.id === id) {
+        // Nunca alterar treatmentBase - mantém o registro no mesmo grupo
+        const { treatmentBase, ...rest } = a;
+        return { ...rest, ...updates, treatmentBase };
+      }
+      return a;
+    }));
   }, [updateAndSave]);
 
   const deleteAnalysis = useCallback((id: string) => {
