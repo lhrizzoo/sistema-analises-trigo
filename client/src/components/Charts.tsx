@@ -189,7 +189,7 @@ export default function Charts({ analyses }: ChartsProps) {
                 <XAxis {...xAxisProps} />
                 <YAxis {...yAxisProps} />
                 <Tooltip content={<CustomTooltip />} />
-                {avgProductivity > 0 && <ReferenceLine y={avgProductivity} stroke="#CC3311" strokeDasharray="4 4" strokeWidth={2.5} isAnimationActive={false} label={{ value: `Média: ${avgProductivity.toFixed(1)}kg/ha`, position: 'insideTopRight', fontSize: 9, fill: '#CC3311' }} />}
+                {avgProductivity > 0 && <ReferenceLine y={avgProductivity} stroke="#CC3311" strokeDasharray="4 4" strokeWidth={2.5} label={{ value: `Média: ${avgProductivity.toFixed(1)}kg/ha`, position: 'insideTopRight', fontSize: 9, fill: '#CC3311' }} />}
                 <Bar dataKey="productivity" name="kg/ha" radius={[3, 3, 0, 0]} maxBarSize={barSize}>
                   {chartData.map((entry, idx) => (
                     <Cell
@@ -229,7 +229,7 @@ export default function Charts({ analyses }: ChartsProps) {
               <XAxis {...xAxisProps} />
               <YAxis {...yAxisProps} domain={['auto', 'auto']} />
               <Tooltip content={<CustomTooltip />} />
-              <ReferenceLine y={avgMoisture} stroke="#CC3311" strokeDasharray="4 4" strokeWidth={2.5} isAnimationActive={false} label={{ value: `Média: ${avgMoisture.toFixed(1)}%`, position: 'insideTopRight', fontSize: 9, fill: '#CC3311' }} />
+              <ReferenceLine y={avgMoisture} stroke="#CC3311" strokeDasharray="4 4" strokeWidth={2.5} label={{ value: `Média: ${avgMoisture.toFixed(1)}%`, position: 'insideTopRight', fontSize: 9, fill: '#CC3311' }} />
               <Bar dataKey="moisture" name="Umidade %" radius={[3, 3, 0, 0]} maxBarSize={barSize}>
                 {chartData.map((entry, idx) => (
                   <Cell key={idx} fill={colorMap.get(entry.treatmentBase) || '#0077BB'} />
@@ -248,7 +248,7 @@ export default function Charts({ analyses }: ChartsProps) {
               <XAxis {...xAxisProps} />
               <YAxis {...yAxisProps} domain={['auto', 'auto']} />
               <Tooltip content={<CustomTooltip />} />
-              <ReferenceLine y={avgPMS} stroke="#CC3311" strokeDasharray="4 4" strokeWidth={2.5} isAnimationActive={false} label={{ value: `Média: ${avgPMS.toFixed(1)}g`, position: 'insideTopRight', fontSize: 9, fill: '#CC3311' }} />
+              <ReferenceLine y={avgPMS} stroke="#CC3311" strokeDasharray="4 4" strokeWidth={2.5} label={{ value: `Média: ${avgPMS.toFixed(1)}g`, position: 'insideTopRight', fontSize: 9, fill: '#CC3311' }} />
               <Bar dataKey="pms" name="PMS (g)" radius={[3, 3, 0, 0]} maxBarSize={barSize}>
                 {chartData.map((entry, idx) => (
                   <Cell key={idx} fill={colorMap.get(entry.treatmentBase) || '#0077BB'} />
@@ -267,7 +267,7 @@ export default function Charts({ analyses }: ChartsProps) {
               <XAxis {...xAxisProps} />
               <YAxis {...yAxisProps} />
               <Tooltip content={<CustomTooltip />} />
-              <ReferenceLine y={avgCorrected} stroke="#CC3311" strokeDasharray="4 4" strokeWidth={2.5} isAnimationActive={false} label={{ value: `Média: ${avgCorrected.toFixed(2)}kg`, position: 'insideTopRight', fontSize: 9, fill: '#CC3311' }} />
+              <ReferenceLine y={avgCorrected} stroke="#CC3311" strokeDasharray="4 4" strokeWidth={2.5} label={{ value: `Média: ${avgCorrected.toFixed(2)}kg`, position: 'insideTopRight', fontSize: 9, fill: '#CC3311' }} />
               <Bar dataKey="correctedWeight" name="Peso Corr. 14%" radius={[3, 3, 0, 0]} maxBarSize={barSize}>
                 {chartData.map((entry, idx) => (
                   <Cell key={idx} fill={colorMap.get(entry.treatmentBase) || '#0077BB'} />
