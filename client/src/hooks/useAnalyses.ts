@@ -4,6 +4,7 @@ import { withCalculations, calcTreatmentStats, getTreatmentBase } from '@/lib/ca
 import { initialAnalyses } from '@/lib/initialData';
 
 const STORAGE_KEY = 'trigo-analyses-v2';
+const REPORTS_STORAGE_KEY = 'trigo-reports-v1';
 
 function loadAnalyses(): Analysis[] {
   try {
@@ -22,6 +23,22 @@ function saveAnalyses(analyses: Analysis[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(analyses));
 }
 
+function loadReports(): Map<string, { file: string; fileName: string }> {
+  try {
+    const stored = localStorage.getItem(REPORTS_STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return new Map(Object.entries(parsed));
+    }
+  } catch { /* ignore */ }
+  return new Map();
+}
+
+function saveReports(reports: Map<string, { file: string; fileName: string }>) {
+  const obj = Object.fromEntries(reports);
+  localStorage.setItem(REPORTS_STORAGE_KEY, JSON.stringify(obj));
+}
+
 let nextId = Date.now();
 function generateId(): string {
   return String(nextId++);
@@ -30,6 +47,7 @@ function generateId(): string {
 export function useAnalyses() {
   const [analyses, setAnalyses] = useState<Analysis[]>(loadAnalyses);
   const [selectedTreatment, setSelectedTreatment] = useState<string>('Todos');
+  const [treatmentReports, setTreatmentReports] = useState<Map<string, { file: string; fileName: string }>>(loadReports);
 
   const updateAndSave = useCallback((updater: (prev: Analysis[]) => Analysis[]) => {
     setAnalyses(prev => {
@@ -73,6 +91,23 @@ export function useAnalyses() {
     setAnalyses(initialAnalyses);
     saveAnalyses(initialAnalyses);
   }, []);
+
+  const uploadReport = useCallback((treatment: string, file: string, fileName: string) => {
+    const updated = new Map(treatmentReports);
+    updated.set(treatment, { file, fileName });
+    setTreatmentReports(updated);
+    saveReports(updated);
+  }, [treatmentReports]);
+
+  const downloadReport = useCallback((treatment: string) => {
+    const report = treatmentReports.get(treatment);
+    if (report) {
+      const link = document.createElement('a');
+      link.href = report.file;
+      link.download = report.fileName;
+      link.click();
+    }
+  }, [treatmentReports]);
 
   // Analyses with calculations
   const analysesWithCalc = useMemo<AnalysisWithCalculations[]>(
@@ -132,5 +167,8 @@ export function useAnalyses() {
     resetData,
     allStats,
     stats: filteredStats,
+    treatmentReports,
+    uploadReport,
+    downloadReport,
   };
 }

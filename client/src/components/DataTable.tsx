@@ -5,7 +5,7 @@
  * NOVO: Funcionalidade de aplicar área colhida em massa
  */
 import { useState } from 'react';
-import { Pencil, Trash2, Check, X, Calculator, CopyPlus, FileUp, Download } from 'lucide-react';
+import { Pencil, Trash2, Check, X, Calculator, CopyPlus } from 'lucide-react';
 import type { Analysis, AnalysisWithCalculations } from '@/lib/types';
 
 interface DataTableProps {
@@ -220,32 +220,6 @@ export default function DataTable({ analyses, onUpdate, onDelete, onAdd, onUpdat
                       </td>
                       <td className="px-2 py-2 text-center">
                         <div className="flex items-center justify-center gap-1">
-                          <label className="p-1.5 rounded-md hover:bg-blue-50 transition-colors cursor-pointer" title="Upload relatório">
-                            <FileUp className="w-3.5 h-3.5 text-blue-600" />
-                            <input type="file" className="hidden" onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                const reader = new FileReader();
-                                reader.onload = (evt) => {
-                                  onUpdate(a.id, {
-                                    reportFile: evt.target?.result as string,
-                                    reportFileName: file.name,
-                                  });
-                                };
-                                reader.readAsDataURL(file);
-                              }
-                            }} />
-                          </label>
-                          {a.reportFile && (
-                            <button onClick={() => {
-                              const link = document.createElement('a');
-                              link.href = a.reportFile!;
-                              link.download = a.reportFileName || 'relatorio.pdf';
-                              link.click();
-                            }} className="p-1.5 rounded-md hover:bg-green-50 transition-colors" title="Download relatório">
-                              <Download className="w-3.5 h-3.5 text-green-600" />
-                            </button>
-                          )}
                           <button onClick={() => startEdit(a)} className="p-1.5 rounded-md hover:bg-[var(--muted)] transition-colors" title="Editar registro">
                             <Pencil className="w-3.5 h-3.5" style={{ color: 'var(--primary)' }} />
                           </button>
@@ -269,7 +243,6 @@ export default function DataTable({ analyses, onUpdate, onDelete, onAdd, onUpdat
                 <td className="px-2 py-2"><input className={inputClass} type="number" step="0.01" placeholder="m²" value={form.harvestedArea} onChange={e => setForm(p => ({ ...p, harvestedArea: e.target.value }))} /></td>
                 <td className="px-3 py-2" style={{ background: 'var(--result-bg)' }} />
                 <td className="px-3 py-2" style={{ background: 'var(--result-bg)' }} />
-                <td className="px-2 py-2 text-center" />
                 <td className="px-2 py-2 text-center">
                   <button
                     onClick={handleAdd}

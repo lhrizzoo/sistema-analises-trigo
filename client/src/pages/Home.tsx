@@ -26,6 +26,9 @@ export default function Home() {
     deleteAnalysis,
     updateAllAreas,
     stats,
+    treatmentReports,
+    uploadReport,
+    downloadReport,
   } = useAnalyses();
 
   return (
@@ -40,6 +43,9 @@ export default function Home() {
           counts={treatmentCounts}
           selected={selectedTreatment}
           onSelect={setSelectedTreatment}
+          treatmentReports={treatmentReports}
+          onReportUpload={uploadReport}
+          onReportDownload={downloadReport}
         />
 
         <DataTable
