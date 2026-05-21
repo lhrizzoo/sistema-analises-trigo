@@ -44,14 +44,7 @@ export function useAnalyses() {
   }, [updateAndSave]);
 
   const updateAnalysis = useCallback((id: string, updates: Partial<Analysis>) => {
-    updateAndSave(prev => prev.map(a => {
-      if (a.id === id) {
-        // Nunca alterar treatmentBase - mantém o registro no mesmo grupo
-        const { treatmentBase, ...rest } = a;
-        return { ...rest, ...updates, treatmentBase };
-      }
-      return a;
-    }));
+    updateAndSave(prev => prev.map(a => a.id === id ? { ...a, ...updates } : a));
   }, [updateAndSave]);
 
   const deleteAnalysis = useCallback((id: string) => {
@@ -91,7 +84,7 @@ export function useAnalyses() {
   const treatmentNames = useMemo(() => {
     const bases = new Set<string>();
     for (const a of analyses) {
-      bases.add(a.treatmentBase || getTreatmentBase(a.treatment));
+      bases.add(getTreatmentBase(a.treatment));
     }
     return ['Todos', ...Array.from(bases).sort()];
   }, [analyses]);
@@ -101,7 +94,7 @@ export function useAnalyses() {
     const counts = new Map<string, number>();
     counts.set('Todos', analyses.length);
     for (const a of analyses) {
-      const base = a.treatmentBase || getTreatmentBase(a.treatment);
+      const base = getTreatmentBase(a.treatment);
       counts.set(base, (counts.get(base) || 0) + 1);
     }
     return counts;
@@ -110,7 +103,7 @@ export function useAnalyses() {
   // Filtered analyses
   const filteredAnalyses = useMemo(() => {
     if (selectedTreatment === 'Todos') return analysesWithCalc;
-    return analysesWithCalc.filter(a => (a.treatmentBase || getTreatmentBase(a.treatment)) === selectedTreatment);
+    return analysesWithCalc.filter(a => getTreatmentBase(a.treatment) === selectedTreatment);
   }, [analysesWithCalc, selectedTreatment]);
 
   // Statistics — always compute from ALL data for charts, but also provide filtered stats
