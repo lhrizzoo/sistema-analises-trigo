@@ -30,8 +30,9 @@ export default function TreatmentFilter({
         <div className="w-1 h-4 rounded-full" style={{ background: 'var(--primary)' }} />
         Tratamentos
       </div>
-      <div className="flex flex-wrap gap-2 items-center">
-        {treatments.map(t => {
+      <div className="flex flex-wrap gap-2 items-center justify-between">
+        <div className="flex flex-wrap gap-2 items-center">
+          {treatments.map(t => {
           const isActive = t === selected;
           const count = counts.get(t) || 0;
           return (
@@ -59,9 +60,10 @@ export default function TreatmentFilter({
             </button>
           );
         })}
+        </div>
         
         {/* Relatório do grupo selecionado */}
-        <div className="ml-auto flex items-center gap-2">
+        <div className="flex items-center gap-2">
           <label className="p-2 rounded-md hover:bg-blue-50 transition-colors cursor-pointer" title="Upload relatório para o grupo">
             <FileUp className="w-4 h-4 text-blue-600" />
             <input 
