@@ -170,7 +170,13 @@ export default function Charts({ analyses }: ChartsProps) {
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap gap-3 mb-4 px-1">
+      <div className="flex flex-wrap gap-4 mb-4 px-1">
+        {/* Average line legend */}
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-0.5" style={{ background: '#CC3311' }} />
+          <span className="text-xs font-medium" style={{ color: 'var(--foreground)' }}>Linha de Média</span>
+        </div>
+        {/* Treatment colors */}
         {Array.from(colorMap.entries()).map(([base, color]) => (
           <div key={base} className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded-sm" style={{ background: color }} />
@@ -189,7 +195,6 @@ export default function Charts({ analyses }: ChartsProps) {
                 <XAxis {...xAxisProps} />
                 <YAxis {...yAxisProps} />
                 <Tooltip content={<CustomTooltip />} />
-                {avgProductivity > 0 && <ReferenceLine y={avgProductivity} stroke="#CC3311" strokeDasharray="4 4" strokeWidth={3.5} label={{ value: `Média: ${avgProductivity.toFixed(1)}kg/ha`, position: 'top', fontSize: 9, fill: '#CC3311', offset: 10 }} />}
                 <Bar dataKey="productivity" name="kg/ha" radius={[3, 3, 0, 0]} maxBarSize={barSize}>
                   {chartData.map((entry, idx) => (
                     <Cell
@@ -203,6 +208,7 @@ export default function Charts({ analyses }: ChartsProps) {
                   ))}
                   <LabelList dataKey="productivity" content={labelRenderer} />
                 </Bar>
+                {avgProductivity > 0 && <ReferenceLine y={avgProductivity} stroke="#CC3311" strokeDasharray="4 4" strokeWidth={2.5} label={{ value: `Média: ${avgProductivity.toFixed(1)}kg/ha`, position: 'insideTopLeft', fontSize: 9, fill: '#CC3311', offset: 5, dx: 5, dy: -5 }} isAnimationActive={false} />}
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -229,13 +235,13 @@ export default function Charts({ analyses }: ChartsProps) {
               <XAxis {...xAxisProps} />
               <YAxis {...yAxisProps} domain={['auto', 'auto']} />
               <Tooltip content={<CustomTooltip />} />
-              <ReferenceLine y={avgMoisture} stroke="#CC3311" strokeDasharray="4 4" strokeWidth={3.5} label={{ value: `Média: ${avgMoisture.toFixed(1)}%`, position: 'top', fontSize: 9, fill: '#CC3311', offset: 10 }} />
               <Bar dataKey="moisture" name="Umidade %" radius={[3, 3, 0, 0]} maxBarSize={barSize}>
                 {chartData.map((entry, idx) => (
                   <Cell key={idx} fill={colorMap.get(entry.treatmentBase) || '#0077BB'} />
                 ))}
                 <LabelList dataKey="moisture" content={labelRenderer} />
               </Bar>
+              <ReferenceLine y={avgMoisture} stroke="#CC3311" strokeDasharray="4 4" strokeWidth={2.5} label={{ value: `Média: ${avgMoisture.toFixed(1)}%`, position: 'insideTopLeft', fontSize: 9, fill: '#CC3311', offset: 5, dx: 5, dy: -5 }} isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -248,13 +254,13 @@ export default function Charts({ analyses }: ChartsProps) {
               <XAxis {...xAxisProps} />
               <YAxis {...yAxisProps} domain={['auto', 'auto']} />
               <Tooltip content={<CustomTooltip />} />
-              <ReferenceLine y={avgPMS} stroke="#CC3311" strokeDasharray="4 4" strokeWidth={3.5} label={{ value: `Média: ${avgPMS.toFixed(1)}g`, position: 'top', fontSize: 9, fill: '#CC3311', offset: 10 }} />
               <Bar dataKey="pms" name="PMS (g)" radius={[3, 3, 0, 0]} maxBarSize={barSize}>
                 {chartData.map((entry, idx) => (
                   <Cell key={idx} fill={colorMap.get(entry.treatmentBase) || '#0077BB'} />
                 ))}
                 <LabelList dataKey="pms" content={labelRenderer} />
               </Bar>
+              <ReferenceLine y={avgPMS} stroke="#CC3311" strokeDasharray="4 4" strokeWidth={2.5} label={{ value: `Média: ${avgPMS.toFixed(1)}g`, position: 'insideTopLeft', fontSize: 9, fill: '#CC3311', offset: 5, dx: 5, dy: -5 }} isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -267,13 +273,13 @@ export default function Charts({ analyses }: ChartsProps) {
               <XAxis {...xAxisProps} />
               <YAxis {...yAxisProps} />
               <Tooltip content={<CustomTooltip />} />
-              <ReferenceLine y={avgCorrected} stroke="#CC3311" strokeDasharray="4 4" strokeWidth={3.5} label={{ value: `Média: ${avgCorrected.toFixed(2)}kg`, position: 'top', fontSize: 9, fill: '#CC3311', offset: 10 }} />
               <Bar dataKey="correctedWeight" name="Peso Corr. 14%" radius={[3, 3, 0, 0]} maxBarSize={barSize}>
                 {chartData.map((entry, idx) => (
                   <Cell key={idx} fill={colorMap.get(entry.treatmentBase) || '#0077BB'} />
                 ))}
                 <LabelList dataKey="correctedWeight" content={labelRenderer} />
               </Bar>
+              <ReferenceLine y={avgCorrected} stroke="#CC3311" strokeDasharray="4 4" strokeWidth={2.5} label={{ value: `Média: ${avgCorrected.toFixed(2)}kg`, position: 'insideTopLeft', fontSize: 9, fill: '#CC3311', offset: 5, dx: 5, dy: -5 }} isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
