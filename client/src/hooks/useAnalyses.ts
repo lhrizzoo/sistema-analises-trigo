@@ -3,7 +3,9 @@ import type { Analysis, AnalysisWithCalculations } from '@/lib/types';
 import { withCalculations, calcTreatmentStats, getTreatmentBase } from '@/lib/calculations';
 import { initialAnalyses } from '@/lib/initialData';
 
-const STORAGE_KEY = 'trigo-analyses-v3';
+const STORAGE_KEY = 'trigo-analyses-v4'; // v4: dados atualizados com areas e tratamentos corretos
+// Limpar versoes antigas do localStorage
+['trigo-analyses-v1', 'trigo-analyses-v2', 'trigo-analyses-v3'].forEach(k => localStorage.removeItem(k));
 const REPORTS_STORAGE_KEY = 'trigo-reports-v1';
 
 function loadAnalyses(): Analysis[] {
