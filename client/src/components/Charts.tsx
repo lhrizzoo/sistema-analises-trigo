@@ -191,7 +191,7 @@ export default function Charts({ analyses }: ChartsProps) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Produtividade */}
-        <ChartCard title="Produtividade (kg/ha)" subtitle="Cada barra = 1 repetição individual" minWidth={hasAnyProductivity ? minChartWidth : undefined} legend={avgProductivity > 0 ? <span style={{ color: '#CC3311', display: 'flex', alignItems: 'center', gap: '6px' }}><svg width="20" height="2" viewBox="0 0 20 2" style={{ stroke: '#CC3311', strokeWidth: 2, strokeDasharray: '5 5' }}><line x1="0" y1="1" x2="20" y2="1" /></svg> Média: {avgProductivity.toFixed(1)} kg/ha</span> : null} averageLabel={avgProductivity > 0 ? `Média: ${avgProductivity.toFixed(1)} kg/ha` : null}>
+        <ChartCard title="Produtividade (kg/ha)" subtitle="Cada barra = 1 repetição individual" minWidth={hasAnyProductivity ? minChartWidth : undefined} legend={null} averageLabel={avgProductivity > 0 ? <span style={{ color: '#CC3311', display: 'flex', alignItems: 'center', gap: '6px' }}><svg width="20" height="2" viewBox="0 0 20 2" style={{ stroke: '#CC3311', strokeWidth: 2, strokeDasharray: '5 5' }}><line x1="0" y1="1" x2="20" y2="1" /></svg> Média: {avgProductivity.toFixed(1)} kg/ha</span> : null}>
           {hasAnyProductivity ? (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} margin={{ top: 25, right: 10, left: 0, bottom: 5 }}>
@@ -232,7 +232,7 @@ export default function Charts({ analyses }: ChartsProps) {
         </ChartCard>
 
         {/* Umidade */}
-        <ChartCard title="Umidade (%)" subtitle="Cada barra = 1 repetição individual" minWidth={minChartWidth} legend={<span style={{ color: '#CC3311', display: 'flex', alignItems: 'center', gap: '6px' }}><svg width="20" height="2" viewBox="0 0 20 2" style={{ stroke: '#CC3311', strokeWidth: 2, strokeDasharray: '5 5' }}><line x1="0" y1="1" x2="20" y2="1" /></svg> Média: {avgMoisture.toFixed(1)}%</span>} averageLabel={`Média: ${avgMoisture.toFixed(1)}%`}>
+        <ChartCard title="Umidade (%)" subtitle="Cada barra = 1 repetição individual" minWidth={minChartWidth} legend={null} averageLabel={<span style={{ color: '#CC3311', display: 'flex', alignItems: 'center', gap: '6px' }}><svg width="20" height="2" viewBox="0 0 20 2" style={{ stroke: '#CC3311', strokeWidth: 2, strokeDasharray: '5 5' }}><line x1="0" y1="1" x2="20" y2="1" /></svg> Média: {avgMoisture.toFixed(1)}%</span>}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} margin={{ top: 25, right: 10, left: 0, bottom: 5 }}>
               <CartesianGrid {...gridProps} />
@@ -251,7 +251,7 @@ export default function Charts({ analyses }: ChartsProps) {
         </ChartCard>
 
         {/* PMS */}
-        <ChartCard title="Peso de Mil Sementes (g)" subtitle="Cada barra = 1 repetição individual" minWidth={minChartWidth} legend={<span style={{ color: '#CC3311', display: 'flex', alignItems: 'center', gap: '6px' }}><svg width="20" height="2" viewBox="0 0 20 2" style={{ stroke: '#CC3311', strokeWidth: 2, strokeDasharray: '5 5' }}><line x1="0" y1="1" x2="20" y2="1" /></svg> Média: {avgPMS.toFixed(1)}g</span>} averageLabel={`Média: ${avgPMS.toFixed(1)}g`}>
+        <ChartCard title="Peso de Mil Sementes (g)" subtitle="Cada barra = 1 repetição individual" minWidth={minChartWidth} legend={null} averageLabel={<span style={{ color: '#CC3311', display: 'flex', alignItems: 'center', gap: '6px' }}><svg width="20" height="2" viewBox="0 0 20 2" style={{ stroke: '#CC3311', strokeWidth: 2, strokeDasharray: '5 5' }}><line x1="0" y1="1" x2="20" y2="1" /></svg> Média: {avgPMS.toFixed(1)}g</span>}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} margin={{ top: 25, right: 10, left: 0, bottom: 5 }}>
               <CartesianGrid {...gridProps} />
@@ -270,7 +270,7 @@ export default function Charts({ analyses }: ChartsProps) {
         </ChartCard>
 
         {/* Peso Corrigido 14% */}
-        <ChartCard title="Peso Corrigido 14% (kg)" subtitle="Cada barra = 1 repetição individual" minWidth={minChartWidth} legend={<span style={{ color: '#CC3311', display: 'flex', alignItems: 'center', gap: '6px' }}><svg width="20" height="2" viewBox="0 0 20 2" style={{ stroke: '#CC3311', strokeWidth: 2, strokeDasharray: '5 5' }}><line x1="0" y1="1" x2="20" y2="1" /></svg> Média: {avgCorrected.toFixed(2)}kg</span>} averageLabel={`Média: ${avgCorrected.toFixed(2)}kg`}>
+        <ChartCard title="Peso Corrigido 14% (kg)" subtitle="Cada barra = 1 repetição individual" minWidth={minChartWidth} legend={null} averageLabel={<span style={{ color: '#CC3311', display: 'flex', alignItems: 'center', gap: '6px' }}><svg width="20" height="2" viewBox="0 0 20 2" style={{ stroke: '#CC3311', strokeWidth: 2, strokeDasharray: '5 5' }}><line x1="0" y1="1" x2="20" y2="1" /></svg> Média: {avgCorrected.toFixed(2)}kg</span>}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} margin={{ top: 25, right: 10, left: 0, bottom: 5 }}>
               <CartesianGrid {...gridProps} />
