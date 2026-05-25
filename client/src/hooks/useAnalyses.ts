@@ -127,11 +127,11 @@ export function useAnalyses() {
     [analyses]
   );
 
-  // Get unique treatment base names
+  // Get unique treatment base names — usa treatmentBase salvo no registro (estável ao renomear)
   const treatmentNames = useMemo(() => {
     const bases = new Set<string>();
     for (const a of analyses) {
-      bases.add(getTreatmentBase(a.treatment));
+      bases.add(a.treatmentBase || getTreatmentBase(a.treatment));
     }
     return ['Todos', ...Array.from(bases).sort()];
   }, [analyses]);
@@ -141,7 +141,7 @@ export function useAnalyses() {
     const counts = new Map<string, number>();
     counts.set('Todos', analyses.length);
     for (const a of analyses) {
-      const base = getTreatmentBase(a.treatment);
+      const base = a.treatmentBase || getTreatmentBase(a.treatment);
       counts.set(base, (counts.get(base) || 0) + 1);
     }
     return counts;
@@ -150,7 +150,7 @@ export function useAnalyses() {
   // Filtered analyses
   const filteredAnalyses = useMemo(() => {
     if (selectedTreatment === 'Todos') return analysesWithCalc;
-    return analysesWithCalc.filter(a => getTreatmentBase(a.treatment) === selectedTreatment);
+    return analysesWithCalc.filter(a => (a.treatmentBase || getTreatmentBase(a.treatment)) === selectedTreatment);
   }, [analysesWithCalc, selectedTreatment]);
 
   // Statistics — always compute from ALL data for charts, but also provide filtered stats
