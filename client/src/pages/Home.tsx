@@ -25,6 +25,7 @@ export default function Home() {
     updateAnalysis,
     deleteAnalysis,
     updateAllAreas,
+    resetData,
     stats,
     treatmentReports,
     uploadReport,
