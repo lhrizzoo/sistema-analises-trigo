@@ -1,12 +1,24 @@
 import { useState, useCallback, useMemo } from 'react';
 import type { Analysis, AnalysisWithCalculations } from '@/lib/types';
-import { withCalculations, calcTreatmentStats, getTreatmentBase } from '@/lib/calculations';
+import { withCalculations, calcTreatmentStats, getTreatmentBase, getTreatmentGroup } from '@/lib/calculations';
 import { initialAnalyses } from '@/lib/initialData';
 
-const STORAGE_KEY = 'trigo-analyses-v4'; // v4: dados atualizados com areas e tratamentos corretos
+const STORAGE_KEY = 'trigo-analyses-v5'; // v5: sistema de agrupamento por groupId/groupName
 // Limpar versoes antigas do localStorage
-['trigo-analyses-v1', 'trigo-analyses-v2', 'trigo-analyses-v3'].forEach(k => localStorage.removeItem(k));
+['trigo-analyses-v1', 'trigo-analyses-v2', 'trigo-analyses-v3', 'trigo-analyses-v4'].forEach(k => localStorage.removeItem(k));
 const REPORTS_STORAGE_KEY = 'trigo-reports-v1';
+
+/**
+ * Garante que um registro tenha groupId e groupName preenchidos.
+ * Se já tiver (salvo pelo usuário), mantém. Se não tiver, detecta pelo nome.
+ */
+function ensureGroupFields(a: Analysis): Analysis {
+  if (a.groupId !== undefined && a.groupId !== null && a.groupName) {
+    return a;
+  }
+  const group = getTreatmentGroup(a.treatment);
+  return { ...a, groupId: group.groupId, groupName: group.groupName };
+}
 
 function loadAnalyses(): Analysis[] {
   try {
@@ -18,19 +30,22 @@ function loadAnalyses(): Analysis[] {
         const initialMap = new Map(initialAnalyses.map(a => [a.id, a]));
         const merged = parsed.map((a: Analysis) => {
           const initial = initialMap.get(a.id);
+          let record = a;
           if (initial && (a.harvestedArea === null || a.harvestedArea === undefined) && initial.harvestedArea !== null) {
-            return { ...a, harvestedArea: initial.harvestedArea };
+            record = { ...record, harvestedArea: initial.harvestedArea };
           }
-          return a;
+          // Garante groupId/groupName em todos os registros
+          return ensureGroupFields(record);
         });
         saveAnalyses(merged);
         return merged;
       }
     }
   } catch { /* ignore */ }
-  // First load: use initial data
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(initialAnalyses));
-  return initialAnalyses;
+  // First load: use initial data with group fields
+  const withGroups = initialAnalyses.map(ensureGroupFields);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(withGroups));
+  return withGroups;
 }
 
 function saveAnalyses(analyses: Analysis[]) {
@@ -90,8 +105,8 @@ export function useAnalyses() {
   const updateAllAreas = useCallback((area: number, treatmentFilter?: string) => {
     updateAndSave(prev => prev.map(a => {
       if (treatmentFilter && treatmentFilter !== 'Todos') {
-        const base = getTreatmentBase(a.treatment);
-        if (base !== treatmentFilter) return a;
+        // Filtra pelo groupName (novo sistema)
+        if (a.groupName !== treatmentFilter) return a;
       }
       return { ...a, harvestedArea: area };
     }));
@@ -102,8 +117,9 @@ export function useAnalyses() {
    */
   const resetData = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY);
-    setAnalyses(initialAnalyses);
-    saveAnalyses(initialAnalyses);
+    const withGroups = initialAnalyses.map(ensureGroupFields);
+    setAnalyses(withGroups);
+    saveAnalyses(withGroups);
   }, []);
 
   const uploadReport = useCallback((treatment: string, file: string, fileName: string) => {
@@ -129,30 +145,40 @@ export function useAnalyses() {
     [analyses]
   );
 
-  // Get unique treatment base names — usa treatmentBase salvo no registro (estável ao renomear)
+  // Get unique group names — usa groupName salvo no registro (estável ao renomear)
+  // Ordenado por groupId para manter ordem consistente
   const treatmentNames = useMemo(() => {
-    const bases = new Set<string>();
+    const groupMap = new Map<string, number>(); // groupName → groupId
     for (const a of analyses) {
-      bases.add(a.treatmentBase || getTreatmentBase(a.treatment));
+      const gName = a.groupName || getTreatmentGroup(a.treatment).groupName;
+      const gId = a.groupId ?? getTreatmentGroup(a.treatment).groupId;
+      if (!groupMap.has(gName)) {
+        groupMap.set(gName, gId);
+      }
     }
-    return ['Todos', ...Array.from(bases).sort()];
+    // Ordena por groupId
+    const sorted = Array.from(groupMap.entries()).sort((a, b) => a[1] - b[1]).map(e => e[0]);
+    return ['Todos', ...sorted];
   }, [analyses]);
 
-  // Treatment counts
+  // Treatment counts — conta por groupName
   const treatmentCounts = useMemo(() => {
     const counts = new Map<string, number>();
     counts.set('Todos', analyses.length);
     for (const a of analyses) {
-      const base = a.treatmentBase || getTreatmentBase(a.treatment);
-      counts.set(base, (counts.get(base) || 0) + 1);
+      const gName = a.groupName || getTreatmentGroup(a.treatment).groupName;
+      counts.set(gName, (counts.get(gName) || 0) + 1);
     }
     return counts;
   }, [analyses]);
 
-  // Filtered analyses
+  // Filtered analyses — filtra por groupName
   const filteredAnalyses = useMemo(() => {
     if (selectedTreatment === 'Todos') return analysesWithCalc;
-    return analysesWithCalc.filter(a => (a.treatmentBase || getTreatmentBase(a.treatment)) === selectedTreatment);
+    return analysesWithCalc.filter(a => {
+      const gName = a.groupName || getTreatmentGroup(a.treatment).groupName;
+      return gName === selectedTreatment;
+    });
   }, [analysesWithCalc, selectedTreatment]);
 
   // Statistics — always compute from ALL data for charts, but also provide filtered stats

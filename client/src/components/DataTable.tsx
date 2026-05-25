@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import { Pencil, Trash2, Check, X, Calculator, CopyPlus } from 'lucide-react';
 import type { Analysis, AnalysisWithCalculations } from '@/lib/types';
+import { getTreatmentGroup } from '@/lib/calculations';
 
 interface DataTableProps {
   analyses: AnalysisWithCalculations[];
@@ -37,6 +38,7 @@ export default function DataTable({ analyses, onUpdate, onDelete, onAdd, onUpdat
     if (!form.treatment.trim() || !form.sampleWeight || !form.moisture || !form.seedWeight1000) return;
     const treatmentName = form.treatment.trim();
     const base = treatmentName.replace(/\s*\d+$/, '').trim();
+    const group = getTreatmentGroup(treatmentName);
     onAdd({
       treatment: treatmentName,
       cultivar: form.cultivar.trim(),
@@ -46,6 +48,8 @@ export default function DataTable({ analyses, onUpdate, onDelete, onAdd, onUpdat
       seedWeight1000: parseFloat(form.seedWeight1000),
       harvestedArea: form.harvestedArea ? parseFloat(form.harvestedArea) : null,
       treatmentBase: base,
+      groupId: group.groupId,
+      groupName: group.groupName,
     });
     setForm(emptyForm);
   };
@@ -68,6 +72,8 @@ export default function DataTable({ analyses, onUpdate, onDelete, onAdd, onUpdat
     const treatmentName = editForm.treatment.trim();
     // Recalcula treatmentBase a partir do novo nome (remove número final)
     const newTreatmentBase = treatmentName.replace(/\s*\d+$/, '').trim();
+    // Detecta grupo automaticamente pelo novo nome
+    const group = getTreatmentGroup(treatmentName);
     onUpdate(editingId, {
       treatment: treatmentName,
       cultivar: editForm.cultivar.trim(),
@@ -77,6 +83,8 @@ export default function DataTable({ analyses, onUpdate, onDelete, onAdd, onUpdat
       seedWeight1000: parseFloat(editForm.seedWeight1000) || 0,
       harvestedArea: editForm.harvestedArea ? parseFloat(editForm.harvestedArea) : null,
       treatmentBase: newTreatmentBase,
+      groupId: group.groupId,
+      groupName: group.groupName,
     });
     setEditingId(null);
   };

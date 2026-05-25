@@ -112,6 +112,41 @@ export function getTreatmentBase(treatment: string): string {
 }
 
 /**
+ * Mapeamento de grupos de tratamento
+ * Chave: prefixo do nome do tratamento
+ * Valor: { groupId, groupName }
+ */
+const TREATMENT_GROUPS: Record<string, { groupId: number; groupName: string }> = {
+  'B1': { groupId: 1, groupName: 'Grupo B' },
+  'B2': { groupId: 1, groupName: 'Grupo B' },
+  'B3': { groupId: 1, groupName: 'Grupo B' },
+  'B4': { groupId: 1, groupName: 'Grupo B' },
+  'B5': { groupId: 1, groupName: 'Grupo B' },
+  'B6': { groupId: 1, groupName: 'Grupo B' },
+  'B7': { groupId: 1, groupName: 'Grupo B' },
+  'BioAct': { groupId: 2, groupName: 'BioAct' },
+  'BioAgreen': { groupId: 3, groupName: 'BioAgreen' },
+  'C-Tec Crop': { groupId: 4, groupName: 'C-Tec Crop' },
+  'Foco': { groupId: 5, groupName: 'Foco' },
+  'Leaf': { groupId: 6, groupName: 'Leaf' },
+  'Rizobacter': { groupId: 7, groupName: 'Rizobacter' },
+  'Yara': { groupId: 8, groupName: 'Yara' },
+};
+
+/**
+ * Detecta automaticamente o grupo do tratamento a partir do nome
+ */
+export function getTreatmentGroup(treatmentName: string): { groupId: number; groupName: string } {
+  const found = Object.keys(TREATMENT_GROUPS).find(key =>
+    treatmentName.startsWith(key)
+  );
+  if (!found) {
+    return { groupId: 999, groupName: 'Outros' };
+  }
+  return TREATMENT_GROUPS[found];
+}
+
+/**
  * Extrai o número de repetição do tratamento
  */
 export function getRepetitionNumber(treatment: string): string {

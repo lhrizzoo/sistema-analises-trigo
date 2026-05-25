@@ -8,6 +8,8 @@ export interface Analysis {
   seedWeight1000: number;
   harvestedArea: number | null;
   treatmentBase: string;
+  groupId: number;
+  groupName: string;
   reportFile?: string; // Base64 encoded file
   reportFileName?: string;
 }
