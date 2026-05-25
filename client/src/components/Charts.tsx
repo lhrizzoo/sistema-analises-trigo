@@ -208,7 +208,7 @@ export default function Charts({ analyses }: ChartsProps) {
                   ))}
                   <LabelList dataKey="productivity" content={labelRenderer} />
                 </Bar>
-                {avgProductivity > 0 && <ReferenceLine y={avgProductivity} stroke="#CC3311" strokeDasharray="4 4" strokeWidth={2.5} label={{ value: `Média: ${avgProductivity.toFixed(1)}kg/ha`, position: 'insideTopLeft', fontSize: 9, fill: '#CC3311', offset: 5, dx: 5, dy: -5 }} isAnimationActive={false} style={{ zIndex: 10 }} />}
+                {avgProductivity > 0 && <ReferenceLine y={avgProductivity} stroke="#CC3311" strokeDasharray="4 4" strokeWidth={2.5} label={{ value: `Média: ${avgProductivity.toFixed(1)}kg/ha`, position: 'insideTopLeft', fontSize: 9, fill: '#CC3311', offset: 5, dx: 5, dy: -5 }} style={{ zIndex: 10 }} />}
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -241,7 +241,7 @@ export default function Charts({ analyses }: ChartsProps) {
                 ))}
                 <LabelList dataKey="moisture" content={labelRenderer} />
               </Bar>
-              <ReferenceLine y={avgMoisture} stroke="#CC3311" strokeDasharray="4 4" strokeWidth={2.5} label={{ value: `Média: ${avgMoisture.toFixed(1)}%`, position: 'insideTopLeft', fontSize: 9, fill: '#CC3311', offset: 5, dx: 5, dy: -5 }} isAnimationActive={false} style={{ zIndex: 10 }} />
+              <ReferenceLine y={avgMoisture} stroke="#CC3311" strokeDasharray="4 4" strokeWidth={2.5} label={{ value: `Média: ${avgMoisture.toFixed(1)}%`, position: 'insideTopLeft', fontSize: 9, fill: '#CC3311', offset: 5, dx: 5, dy: -5 }} style={{ zIndex: 10 }} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -260,7 +260,7 @@ export default function Charts({ analyses }: ChartsProps) {
                 ))}
                 <LabelList dataKey="pms" content={labelRenderer} />
               </Bar>
-              <ReferenceLine y={avgPMS} stroke="#CC3311" strokeDasharray="4 4" strokeWidth={2.5} label={{ value: `Média: ${avgPMS.toFixed(1)}g`, position: 'insideTopLeft', fontSize: 9, fill: '#CC3311', offset: 5, dx: 5, dy: -5 }} isAnimationActive={false} style={{ zIndex: 10 }} />
+              <ReferenceLine y={avgPMS} stroke="#CC3311" strokeDasharray="4 4" strokeWidth={2.5} label={{ value: `Média: ${avgPMS.toFixed(1)}g`, position: 'insideTopLeft', fontSize: 9, fill: '#CC3311', offset: 5, dx: 5, dy: -5 }} style={{ zIndex: 10 }} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -279,7 +279,7 @@ export default function Charts({ analyses }: ChartsProps) {
                 ))}
                 <LabelList dataKey="correctedWeight" content={labelRenderer} />
               </Bar>
-              <ReferenceLine y={avgCorrected} stroke="#CC3311" strokeDasharray="4 4" strokeWidth={2.5} label={{ value: `Média: ${avgCorrected.toFixed(2)}kg`, position: 'insideTopLeft', fontSize: 9, fill: '#CC3311', offset: 5, dx: 5, dy: -5 }} isAnimationActive={false} style={{ zIndex: 10 }} />
+              <ReferenceLine y={avgCorrected} stroke="#CC3311" strokeDasharray="4 4" strokeWidth={2.5} label={{ value: `Média: ${avgCorrected.toFixed(2)}kg`, position: 'insideTopLeft', fontSize: 9, fill: '#CC3311', offset: 5, dx: 5, dy: -5 }} style={{ zIndex: 10 }} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
