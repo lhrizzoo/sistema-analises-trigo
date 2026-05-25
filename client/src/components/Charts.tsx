@@ -19,12 +19,22 @@ interface ChartsProps {
   analyses: AnalysisWithCalculations[];
 }
 
-function ChartCard({ title, subtitle, children, minWidth }: { title: string; subtitle: string; children: React.ReactNode; minWidth?: number }) {
+function ChartCard({ title, subtitle, children, minWidth, avgLabel }: { title: string; subtitle: string; children: React.ReactNode; minWidth?: number; avgLabel?: string }) {
   return (
     <div className="rounded-lg border p-5" style={{ borderColor: 'var(--border)', background: 'var(--card)' }}>
-      <div className="mb-4">
-        <h3 className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{title}</h3>
-        <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{subtitle}</p>
+      <div className="mb-2 flex items-start justify-between gap-2">
+        <div>
+          <h3 className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{title}</h3>
+          <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{subtitle}</p>
+        </div>
+        {avgLabel && (
+          <div className="flex items-center gap-1.5 shrink-0">
+            <svg width="28" height="10" viewBox="0 0 28 10">
+              <line x1="0" y1="5" x2="28" y2="5" stroke="#CC3311" strokeWidth="2" strokeDasharray="5 4" />
+            </svg>
+            <span className="text-xs font-semibold" style={{ color: '#CC3311' }}>{avgLabel}</span>
+          </div>
+        )}
       </div>
       <div className="w-full overflow-x-auto" style={{ height: 420 }}>
         <div style={{ minWidth: minWidth || '100%', height: '100%' }}>
@@ -181,15 +191,19 @@ export default function Charts({ analyses }: ChartsProps) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Produtividade */}
-        <ChartCard title="Produtividade (kg/ha)" subtitle="Cada barra = 1 repetição individual" minWidth={hasAnyProductivity ? minChartWidth : undefined}>
+        <ChartCard
+          title="Produtividade (kg/ha)"
+          subtitle="Cada barra = 1 repetição individual"
+          minWidth={hasAnyProductivity ? minChartWidth : undefined}
+          avgLabel={avgProductivity > 0 ? `Média: ${avgProductivity.toFixed(1)} kg/ha` : undefined}
+        >
           {hasAnyProductivity ? (
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 25, right: 10, left: 0, bottom: 5 }}>
+              <BarChart data={chartData} margin={{ top: 20, right: 10, left: 0, bottom: 5 }}>
                 <CartesianGrid {...gridProps} />
                 <XAxis {...xAxisProps} />
                 <YAxis {...yAxisProps} />
                 <Tooltip content={<CustomTooltip />} />
-                {avgProductivity > 0 && <ReferenceLine y={avgProductivity} stroke="#CC3311" strokeDasharray="4 4" strokeWidth={3.5} label={{ value: `Média: ${avgProductivity.toFixed(1)}kg/ha`, position: 'top', fontSize: 9, fill: '#CC3311', offset: 10 }} />}
                 <Bar dataKey="productivity" name="kg/ha" radius={[3, 3, 0, 0]} maxBarSize={barSize}>
                   {chartData.map((entry, idx) => (
                     <Cell
@@ -203,6 +217,9 @@ export default function Charts({ analyses }: ChartsProps) {
                   ))}
                   <LabelList dataKey="productivity" content={labelRenderer} />
                 </Bar>
+                {avgProductivity > 0 && (
+                  <ReferenceLine y={avgProductivity} stroke="#CC3311" strokeDasharray="5 4" strokeWidth={2.5} />
+                )}
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -222,58 +239,73 @@ export default function Charts({ analyses }: ChartsProps) {
         </ChartCard>
 
         {/* Umidade */}
-        <ChartCard title="Umidade (%)" subtitle="Cada barra = 1 repetição individual" minWidth={minChartWidth}>
+        <ChartCard
+          title="Umidade (%)"
+          subtitle="Cada barra = 1 repetição individual"
+          minWidth={minChartWidth}
+          avgLabel={`Média: ${avgMoisture.toFixed(1)}%`}
+        >
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 25, right: 10, left: 0, bottom: 5 }}>
+            <BarChart data={chartData} margin={{ top: 20, right: 10, left: 0, bottom: 5 }}>
               <CartesianGrid {...gridProps} />
               <XAxis {...xAxisProps} />
               <YAxis {...yAxisProps} domain={['auto', 'auto']} />
               <Tooltip content={<CustomTooltip />} />
-              <ReferenceLine y={avgMoisture} stroke="#CC3311" strokeDasharray="4 4" strokeWidth={3.5} label={{ value: `Média: ${avgMoisture.toFixed(1)}%`, position: 'top', fontSize: 9, fill: '#CC3311', offset: 10 }} />
               <Bar dataKey="moisture" name="Umidade %" radius={[3, 3, 0, 0]} maxBarSize={barSize}>
                 {chartData.map((entry, idx) => (
                   <Cell key={idx} fill={colorMap.get(entry.treatmentBase) || '#0077BB'} />
                 ))}
                 <LabelList dataKey="moisture" content={labelRenderer} />
               </Bar>
+              <ReferenceLine y={avgMoisture} stroke="#CC3311" strokeDasharray="5 4" strokeWidth={2.5} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
 
         {/* PMS */}
-        <ChartCard title="Peso de Mil Sementes (g)" subtitle="Cada barra = 1 repetição individual" minWidth={minChartWidth}>
+        <ChartCard
+          title="Peso de Mil Sementes (g)"
+          subtitle="Cada barra = 1 repetição individual"
+          minWidth={minChartWidth}
+          avgLabel={`Média: ${avgPMS.toFixed(1)} g`}
+        >
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 25, right: 10, left: 0, bottom: 5 }}>
+            <BarChart data={chartData} margin={{ top: 20, right: 10, left: 0, bottom: 5 }}>
               <CartesianGrid {...gridProps} />
               <XAxis {...xAxisProps} />
               <YAxis {...yAxisProps} domain={['auto', 'auto']} />
               <Tooltip content={<CustomTooltip />} />
-              <ReferenceLine y={avgPMS} stroke="#CC3311" strokeDasharray="4 4" strokeWidth={3.5} label={{ value: `Média: ${avgPMS.toFixed(1)}g`, position: 'top', fontSize: 9, fill: '#CC3311', offset: 10 }} />
               <Bar dataKey="pms" name="PMS (g)" radius={[3, 3, 0, 0]} maxBarSize={barSize}>
                 {chartData.map((entry, idx) => (
                   <Cell key={idx} fill={colorMap.get(entry.treatmentBase) || '#0077BB'} />
                 ))}
                 <LabelList dataKey="pms" content={labelRenderer} />
               </Bar>
+              <ReferenceLine y={avgPMS} stroke="#CC3311" strokeDasharray="5 4" strokeWidth={2.5} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
 
         {/* Peso Corrigido 14% */}
-        <ChartCard title="Peso Corrigido 14% (kg)" subtitle="Cada barra = 1 repetição individual" minWidth={minChartWidth}>
+        <ChartCard
+          title="Peso Corrigido 14% (kg)"
+          subtitle="Cada barra = 1 repetição individual"
+          minWidth={minChartWidth}
+          avgLabel={`Média: ${avgCorrected.toFixed(2)} kg`}
+        >
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 25, right: 10, left: 0, bottom: 5 }}>
+            <BarChart data={chartData} margin={{ top: 20, right: 10, left: 0, bottom: 5 }}>
               <CartesianGrid {...gridProps} />
               <XAxis {...xAxisProps} />
               <YAxis {...yAxisProps} />
               <Tooltip content={<CustomTooltip />} />
-              <ReferenceLine y={avgCorrected} stroke="#CC3311" strokeDasharray="4 4" strokeWidth={3.5} label={{ value: `Média: ${avgCorrected.toFixed(2)}kg`, position: 'top', fontSize: 9, fill: '#CC3311', offset: 10 }} />
               <Bar dataKey="correctedWeight" name="Peso Corr. 14%" radius={[3, 3, 0, 0]} maxBarSize={barSize}>
                 {chartData.map((entry, idx) => (
                   <Cell key={idx} fill={colorMap.get(entry.treatmentBase) || '#0077BB'} />
                 ))}
                 <LabelList dataKey="correctedWeight" content={labelRenderer} />
               </Bar>
+              <ReferenceLine y={avgCorrected} stroke="#CC3311" strokeDasharray="5 4" strokeWidth={2.5} />
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
