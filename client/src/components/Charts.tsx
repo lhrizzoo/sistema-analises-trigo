@@ -110,9 +110,22 @@ export default function Charts({ analyses }: ChartsProps) {
     return map;
   }, [analyses]);
 
+  // Ordena tratamentos numericamente (ex: Yara 1, Yara 2, ..., Yara 12, Yara 13)
+  const sortedAnalyses = useMemo(() => {
+    return [...analyses].sort((a, b) => {
+      const baseA = getTreatmentBase(a.treatment);
+      const baseB = getTreatmentBase(b.treatment);
+      if (baseA !== baseB) return baseA.localeCompare(baseB);
+      // Extrai número final para ordenação numérica correta
+      const numA = parseInt(a.treatment.match(/(\d+)$/)?.[1] ?? '0', 10);
+      const numB = parseInt(b.treatment.match(/(\d+)$/)?.[1] ?? '0', 10);
+      return numA - numB;
+    });
+  }, [analyses]);
+
   // Build chart data: one entry per individual analysis (repetition)
   const chartData = useMemo(() => {
-    return analyses.map(a => ({
+    return sortedAnalyses.map(a => ({
       name: a.treatment, // ex: "Foco 1", "Foco 2", etc.
       treatmentBase: getTreatmentBase(a.treatment),
       moisture: a.moisture,
