@@ -212,7 +212,7 @@ export default function Charts({ analyses }: ChartsProps) {
                   ))}
                   <LabelList dataKey="productivity" content={labelRenderer} />
                 </Bar>
-
+                {avgProductivity > 0 && <ReferenceLine y={avgProductivity} stroke="#CC3311" strokeDasharray="5 5" strokeWidth={2.5} />}
             </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -245,7 +245,7 @@ export default function Charts({ analyses }: ChartsProps) {
                 ))}
                 <LabelList dataKey="moisture" content={labelRenderer} />
               </Bar>
-
+              {avgMoisture > 0 && <ReferenceLine y={avgMoisture} stroke="#CC3311" strokeDasharray="5 5" strokeWidth={2.5} />}
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -264,7 +264,7 @@ export default function Charts({ analyses }: ChartsProps) {
                 ))}
                 <LabelList dataKey="pms" content={labelRenderer} />
               </Bar>
-
+              {avgPMS > 0 && <ReferenceLine y={avgPMS} stroke="#CC3311" strokeDasharray="5 5" strokeWidth={2.5} />}
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -283,7 +283,7 @@ export default function Charts({ analyses }: ChartsProps) {
                 ))}
                 <LabelList dataKey="correctedWeight" content={labelRenderer} />
               </Bar>
-
+              {avgCorrected > 0 && <ReferenceLine y={avgCorrected} stroke="#CC3311" strokeDasharray="5 5" strokeWidth={2.5} />}
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
