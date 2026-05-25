@@ -9,7 +9,7 @@
 import { useMemo } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
-  LabelList,
+  LabelList, ReferenceLine,
 } from 'recharts';
 import type { AnalysisWithCalculations } from '@/lib/types';
 import { getTreatmentBase } from '@/lib/calculations';
@@ -209,8 +209,8 @@ export default function Charts({ analyses }: ChartsProps) {
                   ))}
                   <LabelList dataKey="productivity" content={labelRenderer} />
                 </Bar>
-
-              </BarChart>
+                {avgProductivity > 0 && <ReferenceLine y={avgProductivity} stroke="#CC3311" strokeDasharray="5 5" strokeWidth={3} />}
+            </BarChart>
             </ResponsiveContainer>
           ) : (
             <div className="flex flex-col items-center justify-center h-full gap-2">
@@ -242,7 +242,7 @@ export default function Charts({ analyses }: ChartsProps) {
                 ))}
                 <LabelList dataKey="moisture" content={labelRenderer} />
               </Bar>
-
+              {avgMoisture > 0 && <ReferenceLine y={avgMoisture} stroke="#CC3311" strokeDasharray="5 5" strokeWidth={3} />}
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -261,7 +261,7 @@ export default function Charts({ analyses }: ChartsProps) {
                 ))}
                 <LabelList dataKey="pms" content={labelRenderer} />
               </Bar>
-
+              {avgPMS > 0 && <ReferenceLine y={avgPMS} stroke="#CC3311" strokeDasharray="5 5" strokeWidth={3} />}
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
@@ -280,7 +280,7 @@ export default function Charts({ analyses }: ChartsProps) {
                 ))}
                 <LabelList dataKey="correctedWeight" content={labelRenderer} />
               </Bar>
-
+              {avgCorrected > 0 && <ReferenceLine y={avgCorrected} stroke="#CC3311" strokeDasharray="5 5" strokeWidth={3} />}
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
