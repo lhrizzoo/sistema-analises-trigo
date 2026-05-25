@@ -3,7 +3,7 @@ import type { Analysis, AnalysisWithCalculations } from '@/lib/types';
 import { withCalculations, calcTreatmentStats, getTreatmentBase } from '@/lib/calculations';
 import { initialAnalyses } from '@/lib/initialData';
 
-const STORAGE_KEY = 'trigo-analyses-v2';
+const STORAGE_KEY = 'trigo-analyses-v3';
 const REPORTS_STORAGE_KEY = 'trigo-reports-v1';
 
 function loadAnalyses(): Analysis[] {
@@ -11,7 +11,19 @@ function loadAnalyses(): Analysis[] {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        // Merge: update harvestedArea from initialData for records that have null area
+        const initialMap = new Map(initialAnalyses.map(a => [a.id, a]));
+        const merged = parsed.map((a: Analysis) => {
+          const initial = initialMap.get(a.id);
+          if (initial && (a.harvestedArea === null || a.harvestedArea === undefined) && initial.harvestedArea !== null) {
+            return { ...a, harvestedArea: initial.harvestedArea };
+          }
+          return a;
+        });
+        saveAnalyses(merged);
+        return merged;
+      }
     }
   } catch { /* ignore */ }
   // First load: use initial data
