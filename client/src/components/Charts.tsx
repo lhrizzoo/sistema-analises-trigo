@@ -19,12 +19,15 @@ interface ChartsProps {
   analyses: AnalysisWithCalculations[];
 }
 
-function ChartCard({ title, subtitle, children, minWidth, legend }: { title: string; subtitle: string; children: React.ReactNode; minWidth?: number; legend?: React.ReactNode }) {
+function ChartCard({ title, subtitle, children, minWidth, legend, averageLabel }: { title: string; subtitle: string; children: React.ReactNode; minWidth?: number; legend?: React.ReactNode; averageLabel?: React.ReactNode }) {
   return (
     <div className="rounded-lg border p-5" style={{ borderColor: 'var(--border)', background: 'var(--card)' }}>
-      <div className="mb-4">
-        <h3 className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{title}</h3>
-        <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{subtitle}</p>
+      <div className="mb-4 flex justify-between items-start">
+        <div>
+          <h3 className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{title}</h3>
+          <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{subtitle}</p>
+        </div>
+        {averageLabel && <div className="text-xs font-semibold" style={{ color: '#CC3311' }}>{averageLabel}</div>}
       </div>
       <div className="w-full overflow-x-auto" style={{ height: 420 }}>
         <div style={{ minWidth: minWidth || '100%', height: '100%' }}>
@@ -188,7 +191,7 @@ export default function Charts({ analyses }: ChartsProps) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Produtividade */}
-        <ChartCard title="Produtividade (kg/ha)" subtitle="Cada barra = 1 repetição individual" minWidth={hasAnyProductivity ? minChartWidth : undefined} legend={avgProductivity > 0 ? <span style={{ color: '#CC3311' }}>● Média: {avgProductivity.toFixed(1)} kg/ha</span> : null}>
+        <ChartCard title="Produtividade (kg/ha)" subtitle="Cada barra = 1 repetição individual" minWidth={hasAnyProductivity ? minChartWidth : undefined} legend={avgProductivity > 0 ? <span style={{ color: '#CC3311' }}>● Média: {avgProductivity.toFixed(1)} kg/ha</span> : null} averageLabel={avgProductivity > 0 ? `Média: ${avgProductivity.toFixed(1)} kg/ha` : null}>
           {hasAnyProductivity ? (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} margin={{ top: 25, right: 10, left: 0, bottom: 5 }}>
@@ -209,7 +212,7 @@ export default function Charts({ analyses }: ChartsProps) {
                   ))}
                   <LabelList dataKey="productivity" content={labelRenderer} />
                 </Bar>
-                {avgProductivity > 0 && <ReferenceLine y={avgProductivity} stroke="#CC3311" strokeDasharray="5 5" strokeWidth={4} />}
+
             </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -229,7 +232,7 @@ export default function Charts({ analyses }: ChartsProps) {
         </ChartCard>
 
         {/* Umidade */}
-        <ChartCard title="Umidade (%)" subtitle="Cada barra = 1 repetição individual" minWidth={minChartWidth} legend={<span style={{ color: '#CC3311' }}>● Média: {avgMoisture.toFixed(1)}%</span>}>
+        <ChartCard title="Umidade (%)" subtitle="Cada barra = 1 repetição individual" minWidth={minChartWidth} legend={<span style={{ color: '#CC3311' }}>● Média: {avgMoisture.toFixed(1)}%</span>} averageLabel={`Média: ${avgMoisture.toFixed(1)}%`}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} margin={{ top: 25, right: 10, left: 0, bottom: 5 }}>
               <CartesianGrid {...gridProps} />
@@ -242,13 +245,13 @@ export default function Charts({ analyses }: ChartsProps) {
                 ))}
                 <LabelList dataKey="moisture" content={labelRenderer} />
               </Bar>
-              {avgMoisture > 0 && <ReferenceLine y={avgMoisture} stroke="#CC3311" strokeDasharray="5 5" strokeWidth={4} />}
+
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
 
         {/* PMS */}
-        <ChartCard title="Peso de Mil Sementes (g)" subtitle="Cada barra = 1 repetição individual" minWidth={minChartWidth} legend={<span style={{ color: '#CC3311' }}>● Média: {avgPMS.toFixed(1)}g</span>}>
+        <ChartCard title="Peso de Mil Sementes (g)" subtitle="Cada barra = 1 repetição individual" minWidth={minChartWidth} legend={<span style={{ color: '#CC3311' }}>● Média: {avgPMS.toFixed(1)}g</span>} averageLabel={`Média: ${avgPMS.toFixed(1)}g`}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} margin={{ top: 25, right: 10, left: 0, bottom: 5 }}>
               <CartesianGrid {...gridProps} />
@@ -261,13 +264,13 @@ export default function Charts({ analyses }: ChartsProps) {
                 ))}
                 <LabelList dataKey="pms" content={labelRenderer} />
               </Bar>
-              {avgPMS > 0 && <ReferenceLine y={avgPMS} stroke="#CC3311" strokeDasharray="5 5" strokeWidth={4} />}
+
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
 
         {/* Peso Corrigido 14% */}
-        <ChartCard title="Peso Corrigido 14% (kg)" subtitle="Cada barra = 1 repetição individual" minWidth={minChartWidth} legend={<span style={{ color: '#CC3311' }}>● Média: {avgCorrected.toFixed(2)}kg</span>}>
+        <ChartCard title="Peso Corrigido 14% (kg)" subtitle="Cada barra = 1 repetição individual" minWidth={minChartWidth} legend={<span style={{ color: '#CC3311' }}>● Média: {avgCorrected.toFixed(2)}kg</span>} averageLabel={`Média: ${avgCorrected.toFixed(2)}kg`}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} margin={{ top: 25, right: 10, left: 0, bottom: 5 }}>
               <CartesianGrid {...gridProps} />
@@ -280,7 +283,7 @@ export default function Charts({ analyses }: ChartsProps) {
                 ))}
                 <LabelList dataKey="correctedWeight" content={labelRenderer} />
               </Bar>
-              {avgCorrected > 0 && <ReferenceLine y={avgCorrected} stroke="#CC3311" strokeDasharray="5 5" strokeWidth={4} />}
+
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
