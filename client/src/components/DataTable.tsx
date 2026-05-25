@@ -65,14 +65,18 @@ export default function DataTable({ analyses, onUpdate, onDelete, onAdd, onUpdat
 
   const saveEdit = () => {
     if (!editingId) return;
+    const treatmentName = editForm.treatment.trim();
+    // Recalcula treatmentBase a partir do novo nome (remove número final)
+    const newTreatmentBase = treatmentName.replace(/\s*\d+$/, '').trim();
     onUpdate(editingId, {
-      treatment: editForm.treatment.trim(),
+      treatment: treatmentName,
       cultivar: editForm.cultivar.trim(),
       repetition: editForm.repetition.trim(),
       sampleWeight: parseFloat(editForm.sampleWeight) || 0,
       moisture: parseFloat(editForm.moisture) || 0,
       seedWeight1000: parseFloat(editForm.seedWeight1000) || 0,
       harvestedArea: editForm.harvestedArea ? parseFloat(editForm.harvestedArea) : null,
+      treatmentBase: newTreatmentBase,
     });
     setEditingId(null);
   };
