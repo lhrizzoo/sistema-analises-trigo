@@ -1,7 +1,6 @@
-import { saveAs } from 'file-saver';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import 'jspdf-autotable';
 import type { AnalysisWithCalculations, TreatmentStats } from '@/lib/types';
 
 /**
