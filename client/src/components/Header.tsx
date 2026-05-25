@@ -2,13 +2,14 @@
  * Design: Precision Agriculture Dashboard
  * Header verde escuro institucional com identidade agrícola
  */
-import { Wheat, BarChart3 } from 'lucide-react';
+import { Wheat, BarChart3, RotateCcw } from 'lucide-react';
 
 interface HeaderProps {
   totalAnalyses: number;
+  onReset?: () => void;
 }
 
-export default function Header({ totalAnalyses }: HeaderProps) {
+export default function Header({ totalAnalyses, onReset }: HeaderProps) {
   return (
     <header className="w-full" style={{ background: 'var(--header-bg)' }}>
       <div className="container py-4 flex items-center justify-between">
@@ -25,14 +26,31 @@ export default function Header({ totalAnalyses }: HeaderProps) {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.10)' }}>
-          <BarChart3 className="w-4 h-4" style={{ color: 'var(--header-fg)' }} />
-          <span className="font-data text-sm font-medium" style={{ color: 'var(--header-fg)' }}>
-            {totalAnalyses}
-          </span>
-          <span className="text-xs" style={{ color: 'rgba(255,255,255,0.65)' }}>
-            análises
-          </span>
+        <div className="flex items-center gap-4">
+          {onReset && (
+            <button
+              onClick={() => {
+                if (confirm('Tem certeza? Isso vai resetar todos os dados para o estado inicial.')) {
+                  onReset();
+                  window.location.reload();
+                }
+              }}
+              className="p-2 rounded-lg hover:opacity-80 transition-opacity"
+              style={{ background: 'rgba(255,255,255,0.10)' }}
+              title="Resetar dados"
+            >
+              <RotateCcw className="w-4 h-4" style={{ color: 'var(--header-fg)' }} />
+            </button>
+          )}
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.10)' }}>
+            <BarChart3 className="w-4 h-4" style={{ color: 'var(--header-fg)' }} />
+            <span className="font-data text-sm font-medium" style={{ color: 'var(--header-fg)' }}>
+              {totalAnalyses}
+            </span>
+            <span className="text-xs" style={{ color: 'rgba(255,255,255,0.65)' }}>
+              análises
+            </span>
+          </div>
         </div>
       </div>
     </header>

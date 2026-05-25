@@ -33,7 +33,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--background)' }}>
-      <Header totalAnalyses={analyses.length} />
+      <Header totalAnalyses={analyses.length} onReset={resetData} />
 
       <main className="container py-6 flex-1">
         <KPICards analyses={filteredAnalyses} />
