@@ -25,7 +25,6 @@ export default function Home() {
     updateAnalysis,
     deleteAnalysis,
     updateAllAreas,
-    resetData,
     stats,
     treatmentReports,
     uploadReport,
@@ -34,7 +33,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--background)' }}>
-      <Header totalAnalyses={analyses.length} onReset={resetData} />
+      <Header totalAnalyses={analyses.length} />
 
       <main className="container py-6 flex-1">
         <KPICards analyses={filteredAnalyses} />
